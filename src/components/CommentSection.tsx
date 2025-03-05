@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThumbsUp, MessageSquare } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 interface Comment {
   id: string;
