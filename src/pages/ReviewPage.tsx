@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -184,7 +185,7 @@ const ReviewPage = () => {
         </div>
 
         <div className="flex flex-wrap gap-2 mb-8">
-          {review.tags && review.tags.map((tag) => (
+          {review.tags && review.tags.map((tag: string) => (
             <Badge key={tag} variant="secondary" className="flex items-center gap-1">
               <Tag className="h-3 w-3" />
               {tag}
@@ -224,7 +225,7 @@ const ReviewPage = () => {
                 <h3 className="text-xl font-semibold mb-4 text-green-600 dark:text-green-400">Pros</h3>
                 <ul className="space-y-2">
                   {pros && pros.length > 0 ? (
-                    pros.map((pro, index) => (
+                    pros.map((pro: string, index: number) => (
                       <li key={index} className="flex items-start">
                         <span className="text-green-600 dark:text-green-400 mr-2">✓</span>
                         <span>{pro}</span>
@@ -240,7 +241,7 @@ const ReviewPage = () => {
                 <h3 className="text-xl font-semibold mb-4 text-red-600 dark:text-red-400">Cons</h3>
                 <ul className="space-y-2">
                   {cons && cons.length > 0 ? (
-                    cons.map((con, index) => (
+                    cons.map((con: string, index: number) => (
                       <li key={index} className="flex items-start">
                         <span className="text-red-600 dark:text-red-400 mr-2">✗</span>
                         <span>{con}</span>
@@ -275,7 +276,7 @@ const ReviewPage = () => {
                 Object.entries(specs).map(([key, value]) => (
                   <div key={key} className="flex justify-between border-b pb-2">
                     <span className="font-medium">{key}</span>
-                    <span>{value}</span>
+                    <span>{String(value)}</span>
                   </div>
                 ))
               ) : (
