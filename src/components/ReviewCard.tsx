@@ -3,8 +3,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { StarIcon, ThumbsUp, MessageSquare } from 'lucide-react';
+import { StarIcon, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import LikeButton from '@/components/LikeButton';
 
 interface ReviewCardProps {
   id: string;
@@ -16,6 +17,7 @@ interface ReviewCardProps {
   commentsCount: number;
   likesCount: number;
   tags: string[];
+  userLiked?: boolean;
 }
 
 const ReviewCard: React.FC<ReviewCardProps> = ({
@@ -28,6 +30,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   commentsCount,
   likesCount,
   tags,
+  userLiked = false,
 }) => {
   // Generate stars based on rating
   const renderStars = () => {
@@ -96,9 +99,16 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             <MessageSquare className="h-4 w-4 mr-1" />
             <span>{commentsCount} comments</span>
           </div>
-          <div className="flex items-center">
-            <ThumbsUp className="h-4 w-4 mr-1" />
-            <span>{likesCount} likes</span>
+          <div 
+            onClick={(e) => {
+              e.preventDefault(); // Prevent Link navigation
+            }}
+          >
+            <LikeButton 
+              reviewId={id} 
+              initialLikesCount={likesCount} 
+              initialLikedByUser={userLiked}
+            />
           </div>
         </CardFooter>
       </Card>
