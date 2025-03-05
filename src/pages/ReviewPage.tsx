@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -19,7 +18,6 @@ const ReviewPage = () => {
   const { isAuthenticated, user } = useAuth();
   const [likeLoading, setLikeLoading] = useState(false);
 
-  // Fetch the review by slug
   const { data: review, isLoading, error, refetch } = useQuery({
     queryKey: ['review', slug],
     queryFn: async () => {
@@ -37,7 +35,6 @@ const ReviewPage = () => {
     }
   });
 
-  // Check if user has liked the review
   const { data: userLike } = useQuery({
     queryKey: ['reviewLike', slug, user?.id],
     queryFn: async () => {
@@ -66,20 +63,17 @@ const ReviewPage = () => {
     setLikeLoading(true);
     try {
       if (userLike) {
-        // Unlike
         await supabase
           .from('review_likes')
           .delete()
           .eq('review_id', review.id)
           .eq('user_id', user.id);
           
-        // Update likes count
         await supabase
           .from('reviews')
           .update({ likes_count: Math.max(0, review.likes_count - 1) })
           .eq('id', review.id);
       } else {
-        // Like
         await supabase
           .from('review_likes')
           .insert({
@@ -87,7 +81,6 @@ const ReviewPage = () => {
             user_id: user.id
           });
           
-        // Update likes count
         await supabase
           .from('reviews')
           .update({ likes_count: (review.likes_count || 0) + 1 })
@@ -147,7 +140,6 @@ const ReviewPage = () => {
     <div className="min-h-screen">
       <Navbar />
       <main className="container px-4 md:px-6 mx-auto py-8 mt-24">
-        {/* Breadcrumbs */}
         <div className="flex items-center text-sm mb-4 text-muted-foreground">
           <Link to="/" className="hover:text-primary">Home</Link>
           <ChevronRight className="h-4 w-4 mx-1" />
@@ -158,7 +150,6 @@ const ReviewPage = () => {
           <span className="text-foreground">{review.title}</span>
         </div>
 
-        {/* Review Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">{review.title}</h1>
           <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -184,7 +175,6 @@ const ReviewPage = () => {
           <p className="text-lg text-muted-foreground">{review.brief}</p>
         </div>
 
-        {/* Review Image */}
         <div className="rounded-xl overflow-hidden mb-8 glass p-2 shadow-md">
           <img
             src={review.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'}
@@ -193,7 +183,6 @@ const ReviewPage = () => {
           />
         </div>
 
-        {/* Tags */}
         <div className="flex flex-wrap gap-2 mb-8">
           {review.tags && review.tags.map((tag) => (
             <Badge key={tag} variant="secondary" className="flex items-center gap-1">
@@ -203,7 +192,6 @@ const ReviewPage = () => {
           ))}
         </div>
 
-        {/* Action Buttons */}
         <div className="flex items-center gap-3 mb-8">
           <Button 
             variant={userLike ? "default" : "outline"} 
@@ -223,7 +211,6 @@ const ReviewPage = () => {
           </Button>
         </div>
 
-        {/* Review Content */}
         <Tabs defaultValue="overview" className="mb-8">
           <TabsList className="mb-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -233,7 +220,6 @@ const ReviewPage = () => {
           
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Pros */}
               <div className="glass p-6 rounded-xl">
                 <h3 className="text-xl font-semibold mb-4 text-green-600 dark:text-green-400">Pros</h3>
                 <ul className="space-y-2">
@@ -250,7 +236,6 @@ const ReviewPage = () => {
                 </ul>
               </div>
               
-              {/* Cons */}
               <div className="glass p-6 rounded-xl">
                 <h3 className="text-xl font-semibold mb-4 text-red-600 dark:text-red-400">Cons</h3>
                 <ul className="space-y-2">
@@ -268,7 +253,6 @@ const ReviewPage = () => {
               </div>
             </div>
             
-            {/* Brief Summary */}
             <div className="glass p-6 rounded-xl">
               <h3 className="text-xl font-semibold mb-4">AI Summary</h3>
               <p className="leading-relaxed">{review.brief}</p>
@@ -277,9 +261,8 @@ const ReviewPage = () => {
           
           <TabsContent value="details" className="glass p-6 rounded-xl space-y-4">
             <h3 className="text-xl font-semibold mb-4">Detailed AI Review</h3>
-            {/* This would ideally be rendered as HTML with appropriate styling */}
             <div className="prose prose-lg dark:prose-invert max-w-none">
-              {review.content.split('\n').map((paragraph, index) => (
+              {review.content?.split('\n').map((paragraph: string, index: number) => (
                 <p key={index} className="mb-4">{paragraph}</p>
               ))}
             </div>
@@ -302,10 +285,9 @@ const ReviewPage = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Comments Section */}
         <div id="comments" className="pt-4">
           <h2 className="text-2xl font-semibold mb-6">Comments</h2>
-          <CommentSection reviewId={review.id} commentsCount={review.comments_count} />
+          <CommentSection reviewId={review.id} />
         </div>
       </main>
       <Footer />

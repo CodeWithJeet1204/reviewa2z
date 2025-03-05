@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -51,7 +50,7 @@ const CategoryPage = () => {
       
       // Apply tag filters if any are selected
       if (selectedTags.length > 0) {
-        query = query.containsAny('tags', selectedTags);
+        query = query.contains('tags', selectedTags);
       }
       
       // Apply sorting

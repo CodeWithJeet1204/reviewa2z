@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -25,7 +24,6 @@ const SearchPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   
-  // Update URL when filters change
   useEffect(() => {
     const params = new URLSearchParams();
     if (searchTerm) params.set('q', searchTerm);
@@ -34,7 +32,6 @@ const SearchPage = () => {
     setSearchParams(params);
   }, [searchTerm, selectedCategory, sortBy, setSearchParams]);
 
-  // Fetch categories for filter
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
@@ -48,7 +45,6 @@ const SearchPage = () => {
     }
   });
 
-  // Fetch search results
   const { data: reviews, isLoading } = useQuery({
     queryKey: ['searchResults', searchTerm, selectedCategory, sortBy, selectedTags],
     queryFn: async () => {
@@ -63,14 +59,11 @@ const SearchPage = () => {
           category:categories(name, slug)
         `);
       
-      // Apply search filter if provided
       if (searchTerm) {
         query = query.or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%,brief.ilike.%${searchTerm}%`);
       }
       
-      // Apply category filter if provided
       if (selectedCategory) {
-        // Get category ID first
         const { data: categoryData } = await supabase
           .from('categories')
           .select('id')
@@ -82,12 +75,10 @@ const SearchPage = () => {
         }
       }
       
-      // Apply tag filters if any are selected
       if (selectedTags.length > 0) {
-        query = query.containsAny('tags', selectedTags);
+        query = query.contains('tags', selectedTags);
       }
       
-      // Apply sorting
       switch (sortBy) {
         case 'latest':
           query = query.order('created_at', { ascending: false });
@@ -103,8 +94,6 @@ const SearchPage = () => {
           break;
         case 'relevance':
         default:
-          // For relevance sorting, we'd ideally use full-text search capabilities
-          // As a simple approximation, prioritize title matches
           if (searchTerm) {
             query = query.order('title', { ascending: true });
           } else {
@@ -120,7 +109,6 @@ const SearchPage = () => {
     }
   });
 
-  // Fetch all available tags
   const { data: allTags } = useQuery({
     queryKey: ['allTags'],
     queryFn: async () => {
@@ -130,7 +118,6 @@ const SearchPage = () => {
       
       if (error) throw error;
       
-      // Extract and deduplicate tags
       const tagSet = new Set<string>();
       data.forEach(review => {
         if (review.tags) {
@@ -162,20 +149,17 @@ const SearchPage = () => {
     <div className="min-h-screen">
       <Navbar />
       <main className="container px-4 md:px-6 mx-auto py-8 mt-24">
-        {/* Breadcrumbs */}
         <div className="flex items-center text-sm mb-4 text-muted-foreground">
           <Link to="/" className="hover:text-primary">Home</Link>
           <ChevronRight className="h-4 w-4 mx-1" />
           <span className="text-foreground">Search</span>
         </div>
 
-        {/* Search Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">Search Reviews</h1>
           <p className="text-lg text-muted-foreground">Find AI-generated reviews across all categories</p>
         </div>
 
-        {/* Search Input and Filters */}
         <div className="mb-8 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
@@ -222,7 +206,6 @@ const SearchPage = () => {
             </div>
           </div>
 
-          {/* Expanded Filters */}
           {showFilters && (
             <div className="glass p-4 rounded-xl animate-fade-in space-y-4">
               <div>
@@ -273,7 +256,6 @@ const SearchPage = () => {
 
         <Separator className="mb-8" />
 
-        {/* Search Results */}
         {isLoading ? (
           <div className="text-center py-12">
             <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>

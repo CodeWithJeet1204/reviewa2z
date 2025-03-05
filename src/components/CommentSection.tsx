@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -22,12 +23,12 @@ interface Comment {
 
 interface CommentSectionProps {
   reviewId: string;
-  initialComments: Comment[];
+  commentsCount?: number;
 }
 
-const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, initialComments }) => {
+const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount = 0 }) => {
   const { user, isAuthenticated, login } = useAuth();
-  const [comments, setComments] = useState<Comment[]>(initialComments);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -97,7 +98,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, initialCommen
   return (
     <div className="mt-8 space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold">Comments ({comments.length})</h3>
+        <h3 className="text-xl font-semibold">Comments ({comments.length || commentsCount})</h3>
       </div>
       
       <Card className="p-5 glass">
