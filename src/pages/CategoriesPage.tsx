@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -23,20 +22,19 @@ const CategoriesPage = () => {
       // Get review counts in a single query
       const { data: reviewCounts, error: countError } = await supabase
         .from('reviews')
-        .select('category_id, count')
-        .count()
+        .select('category_id, count(*)', { count: 'exact' })
         .group('category_id');
       
       if (countError) throw countError;
       
       // Create a map of category_id to count
-      const countsMap = reviewCounts?.reduce((acc, item) => {
+      const countsMap = reviewCounts?.reduce((acc: Record<string, number>, item: any) => {
         acc[item.category_id] = item.count;
         return acc;
       }, {}) || {};
       
       // Combine data
-      return data.map(category => ({
+      return data.map((category: any) => ({
         ...category,
         reviewCount: countsMap[category.id] || 0
       }));

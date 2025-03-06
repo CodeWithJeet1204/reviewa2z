@@ -7,7 +7,7 @@ import { StarIcon, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import LikeButton from '@/components/LikeButton';
 
-interface ReviewCardProps {
+export interface ReviewCardProps {
   id: string;
   title: string;
   category: string;

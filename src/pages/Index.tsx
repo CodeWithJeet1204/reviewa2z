@@ -157,13 +157,36 @@ const FeaturedReviewsSection = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('reviews')
-        .select('id, title, slug, category_id, image_url, rating, brief, likes_count, comments_count, tags')
+        .select(`
+          id, 
+          title, 
+          slug, 
+          category_id, 
+          image_url, 
+          rating, 
+          brief, 
+          likes_count, 
+          comments_count, 
+          tags,
+          categories(name)
+        `)
         .eq('is_featured', true)
         .order('created_at', { ascending: false })
         .limit(6);
       
       if (error) throw error;
-      return data;
+      
+      return data.map((review) => ({
+        id: review.id,
+        title: review.title,
+        category: review.categories?.name || 'Uncategorized',
+        image: review.image_url || 'https://via.placeholder.com/300x200',
+        rating: review.rating,
+        brief: review.brief || '',
+        commentsCount: review.comments_count || 0,
+        likesCount: review.likes_count || 0,
+        tags: review.tags || [],
+      }));
     },
     staleTime: 60000,
     refetchOnWindowFocus: false,
@@ -222,18 +245,17 @@ const CategoriesSection = () => {
       
       const { data: reviewCounts, error: countError } = await supabase
         .from('reviews')
-        .select('category_id, count')
-        .count()
+        .select('category_id, count(*)', { count: 'exact' })
         .group('category_id');
       
       if (countError) throw countError;
       
-      const countsMap = reviewCounts?.reduce((acc, item) => {
+      const countsMap = reviewCounts?.reduce((acc: Record<string, number>, item: any) => {
         acc[item.category_id] = item.count;
         return acc;
       }, {}) || {};
       
-      return data.map(category => ({
+      return data.map((category: any) => ({
         ...category,
         count: countsMap[category.id] || 0
       }));

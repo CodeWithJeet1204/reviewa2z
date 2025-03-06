@@ -229,6 +229,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  // Wrapper function to handle login button click
+  const handleLoginClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    login();
+  };
+
   return (
     <div className="mt-8 space-y-6">
       <div className="flex items-center justify-between">
@@ -250,7 +256,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
           ) : (
             <div className="flex justify-between items-center mb-2">
               <p className="text-muted-foreground text-sm">Sign in to join the conversation</p>
-              <Button type="button" variant="outline" size="sm" onClick={login}>
+              <Button type="button" variant="outline" size="sm" onClick={handleLoginClick}>
                 Sign In
               </Button>
             </div>
