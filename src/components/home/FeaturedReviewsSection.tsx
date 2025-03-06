@@ -25,23 +25,6 @@ interface FeaturedReview {
   };
 }
 
-// Define the type for review card props
-interface ReviewCardProps {
-  id: string;
-  title: string;
-  slug: string;
-  category: {
-    name: string;
-    slug: string;
-  };
-  image: string;
-  rating: number;
-  brief: string;
-  likesCount: number;
-  commentsCount: number;
-  tags: string[];
-}
-
 const FeaturedReviewsSection = () => {
   const { data: featuredReviews, isLoading } = useQuery({
     queryKey: ['featuredReviews'],
@@ -59,20 +42,6 @@ const FeaturedReviewsSection = () => {
       
       return data as unknown as FeaturedReview[];
     }
-  });
-
-  // Transform the featured reviews to match the ReviewCard props
-  const mapToReviewCardProps = (review: FeaturedReview): ReviewCardProps => ({
-    id: review.id,
-    title: review.title,
-    slug: review.slug,
-    category: review.category,
-    image: review.image_url,
-    rating: review.rating,
-    brief: review.brief,
-    likesCount: review.likes_count,
-    commentsCount: review.comments_count,
-    tags: review.tags || []
   });
 
   return (
@@ -100,7 +69,20 @@ const FeaturedReviewsSection = () => {
         ) : featuredReviews && featuredReviews.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredReviews.map((review) => (
-              <ReviewCard key={review.id} {...mapToReviewCardProps(review)} />
+              <ReviewCard 
+                key={review.id}
+                id={review.id}
+                title={review.title}
+                slug={review.slug}
+                category={review.category.name}
+                categorySlug={review.category.slug}
+                image={review.image_url}
+                rating={review.rating}
+                brief={review.brief}
+                likesCount={review.likes_count}
+                commentsCount={review.comments_count}
+                tags={review.tags || []}
+              />
             ))}
           </div>
         ) : (
