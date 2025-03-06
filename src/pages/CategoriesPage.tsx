@@ -9,26 +9,40 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 
 const CategoriesPage = () => {
-  // Fetch all categories
+  // Fetch all categories with optimized query and caching
   const { data: categories, isLoading } = useQuery({
     queryKey: ['allCategories'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('categories')
-        .select(`
-          *,
-          reviews:reviews(id)
-        `)
+        .select('id, name, slug, icon, description')
         .order('name');
       
       if (error) throw error;
       
-      // Count number of reviews per category
+      // Get review counts in a single query
+      const { data: reviewCounts, error: countError } = await supabase
+        .from('reviews')
+        .select('category_id, count')
+        .count()
+        .group('category_id');
+      
+      if (countError) throw countError;
+      
+      // Create a map of category_id to count
+      const countsMap = reviewCounts?.reduce((acc, item) => {
+        acc[item.category_id] = item.count;
+        return acc;
+      }, {}) || {};
+      
+      // Combine data
       return data.map(category => ({
         ...category,
-        reviewCount: category.reviews ? category.reviews.length : 0
+        reviewCount: countsMap[category.id] || 0
       }));
-    }
+    },
+    staleTime: 60000, // Cache for 1 minute
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
   });
 
   return (

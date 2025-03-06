@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -70,7 +69,7 @@ const HeroSection = () => {
           </div>
           
           <div className="relative">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-blue-400 rounded-xl blur-2xl opacity-10 animate-pulse"></div>
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-blue-400 rounded-xl blur-xl"></div>
             <div className="relative glass rounded-xl overflow-hidden shadow-xl p-2 animate-fade-in">
               <img 
                 src="https://images.unsplash.com/photo-1521791055366-0d553872125f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" 
@@ -95,7 +94,6 @@ const HeroSection = () => {
         </div>
       </div>
       
-      {/* Abstract shapes */}
       <div className="hidden md:block absolute top-1/4 right-0 h-64 w-64 bg-primary/5 rounded-full blur-3xl"></div>
       <div className="hidden md:block absolute bottom-1/4 left-0 h-96 w-96 bg-blue-400/5 rounded-full blur-3xl"></div>
     </div>
@@ -154,20 +152,21 @@ const SearchSection = () => {
 };
 
 const FeaturedReviewsSection = () => {
-  // Fetch featured reviews
   const { data: featuredReviews, isLoading } = useQuery({
     queryKey: ['featuredReviews'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('reviews')
-        .select('*')
+        .select('id, title, slug, category_id, image_url, rating, brief, likes_count, comments_count, tags')
         .eq('is_featured', true)
         .order('created_at', { ascending: false })
         .limit(6);
       
       if (error) throw error;
       return data;
-    }
+    },
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
   });
 
   return (
@@ -187,7 +186,7 @@ const FeaturedReviewsSection = () => {
       ) : featuredReviews && featuredReviews.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {featuredReviews.map((review) => (
-            <div key={review.id} className="animate-fade-in" style={{ animationDelay: `${parseInt(review.id) * 100}ms` }}>
+            <div key={review.id} className="animate-fade-in" style={{ animationDelay: `${parseInt(review.id.slice(0, 8), 16) % 300}ms` }}>
               <ReviewCard {...review} />
             </div>
           ))}
@@ -210,27 +209,37 @@ const FeaturedReviewsSection = () => {
 };
 
 const CategoriesSection = () => {
-  // Fetch categories
   const { data: categories, isLoading } = useQuery({
     queryKey: ['homeCategories'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('categories')
-        .select(`
-          *,
-          reviews:reviews(id)
-        `)
+        .select('id, name, slug, icon')
         .order('name')
         .limit(8);
       
       if (error) throw error;
       
-      // Count number of reviews per category
+      const { data: reviewCounts, error: countError } = await supabase
+        .from('reviews')
+        .select('category_id, count')
+        .count()
+        .group('category_id');
+      
+      if (countError) throw countError;
+      
+      const countsMap = reviewCounts?.reduce((acc, item) => {
+        acc[item.category_id] = item.count;
+        return acc;
+      }, {}) || {};
+      
       return data.map(category => ({
         ...category,
-        count: category.reviews ? category.reviews.length : 0
+        count: countsMap[category.id] || 0
       }));
-    }
+    },
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
   });
 
   return (
@@ -344,7 +353,6 @@ const CtaSection = () => (
   <div className="bg-primary/5 py-16">
     <div className="container px-4 md:px-6 mx-auto">
       <div className="glass rounded-xl p-8 sm:p-12 relative overflow-hidden">
-        {/* Background blurs */}
         <div className="absolute -bottom-16 -right-16 h-64 w-64 bg-primary/10 rounded-full blur-2xl"></div>
         <div className="absolute -top-16 -left-16 h-64 w-64 bg-blue-400/10 rounded-full blur-2xl"></div>
         
