@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -6,6 +7,15 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  icon: string | null;
+  description: string | null;
+  reviewCount: number;
+}
 
 const CategoriesPage = () => {
   // Fetch all categories with optimized query and caching
@@ -19,22 +29,43 @@ const CategoriesPage = () => {
       
       if (error) throw error;
       
-      // Get review counts in a single query
+      // Get review counts
       const { data: reviewCounts, error: countError } = await supabase
-        .from('reviews')
-        .select('category_id, count(*)', { count: 'exact' })
-        .group('category_id');
+        .rpc('get_category_counts'); // We'll create this function
       
-      if (countError) throw countError;
+      if (countError) {
+        console.error("Error fetching review counts:", countError);
+        // If the function fails, we'll use a simpler approach
+        const { data: simpleCounts, error: simpleError } = await supabase
+          .from('reviews')
+          .select('category_id, id');
+        
+        if (simpleError) throw simpleError;
+        
+        // Manually count reviews per category
+        const countsMap: Record<string, number> = {};
+        if (simpleCounts) {
+          simpleCounts.forEach((item: any) => {
+            if (item.category_id) {
+              countsMap[item.category_id] = (countsMap[item.category_id] || 0) + 1;
+            }
+          });
+        }
+        
+        return (data || []).map((category: any): Category => ({
+          ...category,
+          reviewCount: countsMap[category.id] || 0
+        }));
+      }
       
-      // Create a map of category_id to count
+      // If the RPC function works, use its results
       const countsMap = reviewCounts?.reduce((acc: Record<string, number>, item: any) => {
         acc[item.category_id] = item.count;
         return acc;
       }, {}) || {};
       
       // Combine data
-      return data.map((category: any) => ({
+      return (data || []).map((category: any): Category => ({
         ...category,
         reviewCount: countsMap[category.id] || 0
       }));

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, ChevronRight, Star, Shield, Bot, CircleArrowRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import ReviewCard from '@/components/ReviewCard';
+import ReviewCard, { ReviewCardProps } from '@/components/ReviewCard';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 
@@ -176,7 +176,7 @@ const FeaturedReviewsSection = () => {
       
       if (error) throw error;
       
-      return data.map((review) => ({
+      return data.map((review: any): ReviewCardProps => ({
         id: review.id,
         title: review.title,
         category: review.categories?.name || 'Uncategorized',
@@ -186,6 +186,7 @@ const FeaturedReviewsSection = () => {
         commentsCount: review.comments_count || 0,
         likesCount: review.likes_count || 0,
         tags: review.tags || [],
+        userLiked: false
       }));
     },
     staleTime: 60000,
@@ -243,17 +244,20 @@ const CategoriesSection = () => {
       
       if (error) throw error;
       
-      const { data: reviewCounts, error: countError } = await supabase
+      const { data: reviewData, error: reviewError } = await supabase
         .from('reviews')
-        .select('category_id, count(*)', { count: 'exact' })
-        .group('category_id');
+        .select('category_id, id');
       
-      if (countError) throw countError;
+      if (reviewError) throw reviewError;
       
-      const countsMap = reviewCounts?.reduce((acc: Record<string, number>, item: any) => {
-        acc[item.category_id] = item.count;
-        return acc;
-      }, {}) || {};
+      const countsMap: Record<string, number> = {};
+      if (reviewData) {
+        reviewData.forEach((item: any) => {
+          if (item.category_id) {
+            countsMap[item.category_id] = (countsMap[item.category_id] || 0) + 1;
+          }
+        });
+      }
       
       return data.map((category: any) => ({
         ...category,
