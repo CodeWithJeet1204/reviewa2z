@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -219,7 +220,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
 
   const handleLoginClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    login();
+    login("", "");  // Fixed: Pass empty strings to match the expected parameters
   };
 
   return (

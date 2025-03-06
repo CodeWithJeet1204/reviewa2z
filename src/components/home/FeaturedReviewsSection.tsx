@@ -1,27 +1,46 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ChevronRight } from 'lucide-react';
-import ReviewCard, { ReviewCardProps } from '@/components/ReviewCard';
+import { ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import ReviewCard from '@/components/ReviewCard';
 import { supabase } from '@/lib/supabase';
 
-type FeaturedReview = {
+// Define the type for featured reviews
+interface FeaturedReview {
   id: string;
   title: string;
   slug: string;
-  category_id: string;
+  category_id: number;
   image_url: string;
   rating: number;
   brief: string;
   likes_count: number;
   comments_count: number;
   tags: string[];
-  categories: {
+  category: {
     name: string;
+    slug: string;
   };
-};
+}
+
+// Define the type for review card props
+interface ReviewCardProps {
+  id: string;
+  title: string;
+  slug: string;
+  category: {
+    name: string;
+    slug: string;
+  };
+  image: string;
+  rating: number;
+  brief: string;
+  likesCount: number;
+  commentsCount: number;
+  tags: string[];
+}
 
 const FeaturedReviewsSection = () => {
   const { data: featuredReviews, isLoading } = useQuery({
@@ -30,75 +49,65 @@ const FeaturedReviewsSection = () => {
       const { data, error } = await supabase
         .from('reviews')
         .select(`
-          id, 
-          title, 
-          slug, 
-          category_id, 
-          image_url, 
-          rating, 
-          brief, 
-          likes_count, 
-          comments_count, 
-          tags,
-          categories(name)
+          id, title, slug, category_id, image_url, rating, brief, likes_count, comments_count, tags,
+          category:categories(name, slug)
         `)
         .eq('is_featured', true)
-        .order('created_at', { ascending: false })
         .limit(6);
-      
+        
       if (error) throw error;
       
-      return data.map((review: FeaturedReview): ReviewCardProps => ({
-        id: review.id,
-        title: review.title,
-        category: review.categories?.name || 'Uncategorized',
-        image: review.image_url || 'https://via.placeholder.com/300x200',
-        rating: review.rating,
-        brief: review.brief || '',
-        commentsCount: review.comments_count || 0,
-        likesCount: review.likes_count || 0,
-        tags: review.tags || [],
-        userLiked: false
-      }));
-    },
-    staleTime: 60000,
-    refetchOnWindowFocus: false,
+      return data as unknown as FeaturedReview[];
+    }
+  });
+
+  // Transform the featured reviews to match the ReviewCard props
+  const mapToReviewCardProps = (review: FeaturedReview): ReviewCardProps => ({
+    id: review.id,
+    title: review.title,
+    slug: review.slug,
+    category: review.category,
+    image: review.image_url,
+    rating: review.rating,
+    brief: review.brief,
+    likesCount: review.likes_count,
+    commentsCount: review.comments_count,
+    tags: review.tags || []
   });
 
   return (
-    <div className="container px-4 md:px-6 mx-auto py-12">
-      <div className="space-y-2 text-center mb-10">
-        <h2 className="text-3xl font-bold tracking-tight">Featured Reviews</h2>
-        <p className="text-muted-foreground max-w-[700px] mx-auto">
-          Discover our latest AI-generated reviews across popular categories
-        </p>
-      </div>
-      
-      {isLoading ? (
-        <div className="text-center py-12">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl font-medium">Loading reviews...</p>
+    <div className="bg-background py-16">
+      <div className="container px-4 md:px-6 mx-auto">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Featured Reviews</h2>
+            <p className="text-muted-foreground mt-2">Discover our expert takes on the latest products</p>
+          </div>
+          <Button variant="ghost" asChild className="group">
+            <Link to="/search" className="flex items-center gap-1">
+              View all reviews 
+              <ArrowRight className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </Button>
         </div>
-      ) : featuredReviews && featuredReviews.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredReviews.map((review) => (
-            <div key={review.id} className="animate-fade-in" style={{ animationDelay: `${parseInt(review.id.slice(0, 8), 16) % 300}ms` }}>
-              <ReviewCard {...review} />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">No featured reviews available at the moment.</p>
-        </div>
-      )}
-      
-      <div className="mt-12 text-center">
-        <Button asChild>
-          <Link to="/search">
-            View All Reviews <ChevronRight className="ml-2 h-5 w-5" />
-          </Link>
-        </Button>
+        
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="rounded-lg bg-muted animate-pulse h-[350px]"></div>
+            ))}
+          </div>
+        ) : featuredReviews && featuredReviews.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredReviews.map((review) => (
+              <ReviewCard key={review.id} {...mapToReviewCardProps(review)} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-10">
+            <p className="text-muted-foreground">No featured reviews found</p>
+          </div>
+        )}
       </div>
     </div>
   );
