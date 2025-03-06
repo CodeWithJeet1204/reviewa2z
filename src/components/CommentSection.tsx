@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -49,7 +48,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
 
-  // Fetch comments for this review
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ['comments', reviewId],
     queryFn: async () => {
@@ -69,7 +67,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
         throw error;
       }
       
-      // Fetch user likes for these comments if user is authenticated
       let userLikes: Record<string, boolean> = {};
       
       if (isAuthenticated && user) {
@@ -86,7 +83,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
         }
       }
       
-      // Transform database comments to our Comment interface
       return (data || []).map((comment: DatabaseComment) => ({
         id: comment.id,
         author: {
@@ -97,14 +93,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
         date: comment.created_at,
         likes: comment.likes_count || 0,
         userLiked: !!userLikes[comment.id],
-        // We'll fetch replies separately if needed
         replies: [],
       }));
     },
     refetchOnWindowFocus: false,
   });
 
-  // Create a new comment
   const createComment = useMutation({
     mutationFn: async (content: string) => {
       if (!isAuthenticated || !user) {
@@ -122,7 +116,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
         
       if (error) throw error;
       
-      // Update the review comments count
       await supabase
         .from('reviews')
         .update({ comments_count: commentsCount + 1 })
@@ -142,7 +135,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
     }
   });
 
-  // Like a comment
   const likeComment = useMutation({
     mutationFn: async ({ commentId, liked }: { commentId: string, liked: boolean }) => {
       if (!isAuthenticated || !user) {
@@ -150,7 +142,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
       }
       
       if (liked) {
-        // Unlike: delete the like
         const { error: deleteError } = await supabase
           .from('comment_likes')
           .delete()
@@ -159,7 +150,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
           
         if (deleteError) throw deleteError;
         
-        // Decrement likes count
         const { error: updateError } = await supabase
           .from('comments')
           .update({ likes_count: supabase.rpc('decrement', { x: 1 }) })
@@ -167,7 +157,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
           
         if (updateError) throw updateError;
       } else {
-        // Like: insert a new like
         const { error: insertError } = await supabase
           .from('comment_likes')
           .insert({
@@ -177,7 +166,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
           
         if (insertError) throw insertError;
         
-        // Increment likes count
         const { error: updateError } = await supabase
           .from('comments')
           .update({ likes_count: supabase.rpc('increment', { x: 1 }) })
@@ -229,7 +217,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  // Wrapper function to handle login button click
   const handleLoginClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     login();
