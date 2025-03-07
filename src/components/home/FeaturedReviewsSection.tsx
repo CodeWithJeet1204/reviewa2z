@@ -53,7 +53,7 @@ const FeaturedReviewsSection = () => {
             <p className="text-muted-foreground mt-2">Discover our expert takes on the latest products</p>
           </div>
           <Button variant="ghost" asChild className="group">
-            <Link to="/search" className="flex items-center gap-1">
+            <Link to="/search" className="flex items-center gap-1 w-full h-full">
               View all reviews 
               <ArrowRight className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
             </Link>
