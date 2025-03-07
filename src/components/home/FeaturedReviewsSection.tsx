@@ -73,9 +73,8 @@ const FeaturedReviewsSection = () => {
                 key={review.id}
                 id={review.id}
                 title={review.title}
-                categoryName={review.category.name}
-                categorySlug={review.category.slug}
-                imageUrl={review.image_url}
+                category={review.category.name}
+                image={review.image_url}
                 rating={review.rating}
                 brief={review.brief}
                 likesCount={review.likes_count}
