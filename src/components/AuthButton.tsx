@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -22,6 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogIn, LogOut, User, UserPlus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from "sonner";
+import { Link, useNavigate } from 'react-router-dom';
 
 const AuthButton = () => {
   const { user, isAuthenticated, isLoading, login, signup, logout } = useAuth();
@@ -31,6 +31,7 @@ const AuthButton = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +100,6 @@ const AuthButton = () => {
           </Button>
         </div>
 
-        {/* Login Dialog */}
         <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
@@ -148,7 +148,6 @@ const AuthButton = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Signup Dialog */}
         <Dialog open={isSignupOpen} onOpenChange={setIsSignupOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
@@ -233,7 +232,7 @@ const AuthButton = () => {
           </div>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => navigate('/profile')}>
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>
         </DropdownMenuItem>

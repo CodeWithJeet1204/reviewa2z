@@ -86,13 +86,13 @@ const CategoriesSection = () => {
         </div>
         
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {[...Array(6)].map((_, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {[...Array(5)].map((_, i) => (
               <div key={i} className="rounded-lg bg-muted animate-pulse h-[100px]"></div>
             ))}
           </div>
         ) : categories && categories.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {categories.map((category) => (
               <Link key={category.id} to={`/category/${category.slug}`}>
                 <Card className="h-full glass hover:shadow-md transition-all duration-300 overflow-hidden group">
