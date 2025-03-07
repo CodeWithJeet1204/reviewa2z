@@ -1,12 +1,39 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge'; 
 import { Search, ChevronRight, Star, Shield, Bot } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 
 const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+
+  const { data: latestReview, isLoading } = useQuery({
+    queryKey: ['latestReview'],
+    queryFn: async () => {
+      console.log('Fetching latest review...');
+      const { data, error } = await supabase
+        .from('reviews')
+        .select(`
+          id, title, slug, image_url, rating, created_at
+        `)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+        
+      if (error) {
+        console.error("Error fetching latest review:", error);
+        return null;
+      }
+      
+      console.log('Latest review fetched:', data);
+      return data;
+    },
+    staleTime: 60000, // Cache for 1 minute
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,13 +58,13 @@ const HeroSection = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="transition-all duration-300 hover:scale-[1.02]" asChild>
-                <Link to="/search">
+              <Button size="lg" className="transition-all duration-300 hover:scale-[1.02] w-full h-full" asChild>
+                <Link to="/search" className="w-full h-full flex items-center justify-center">
                   <Search className="mr-2 h-5 w-5" /> Explore Reviews
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" asChild>
-                <Link to="/about">
+              <Button variant="outline" size="lg" className="w-full h-full" asChild>
+                <Link to="/about" className="w-full h-full flex items-center justify-center">
                   How It Works <ChevronRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -61,29 +88,39 @@ const HeroSection = () => {
             </div>
           </div>
           
-          <div className="relative">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-blue-400 rounded-xl blur-xl"></div>
-            <div className="relative glass rounded-xl overflow-hidden shadow-xl p-2 animate-fade-in">
-              <img 
-                src="https://images.unsplash.com/photo-1521791055366-0d553872125f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" 
-                alt="AI Review Process" 
-                className="rounded-lg w-full h-full object-cover"
-              />
-              <div className="absolute bottom-0 left-0 right-0 glass p-4 backdrop-blur-md">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Badge className="mb-2">New Review</Badge>
-                    <h3 className="font-medium">MacBook Pro M3 Max</h3>
-                  </div>
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-yellow-400" />
-                    ))}
+          {latestReview ? (
+            <div className="relative">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-blue-400 rounded-xl blur-xl"></div>
+              <Link to={`/review/${latestReview.slug}`} className="block">
+                <div className="relative glass rounded-xl overflow-hidden shadow-xl p-2 animate-fade-in hover:shadow-2xl transition-shadow duration-300">
+                  <img 
+                    src={latestReview.image_url || "https://images.unsplash.com/photo-1521791055366-0d553872125f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"} 
+                    alt={latestReview.title} 
+                    className="rounded-lg w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 glass p-4 backdrop-blur-md">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Badge className="mb-2">Latest Review</Badge>
+                        <h3 className="font-medium">{latestReview.title}</h3>
+                      </div>
+                      <div className="flex text-yellow-400">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`h-4 w-4 ${i < Math.round(latestReview.rating) ? 'fill-yellow-400' : 'text-gray-300'}`} />
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             </div>
-          </div>
+          ) : (
+            isLoading ? (
+              <div className="relative animate-pulse">
+                <div className="bg-gray-200 dark:bg-gray-700 rounded-xl h-[300px]"></div>
+              </div>
+            ) : null
+          )}
         </div>
       </div>
       
