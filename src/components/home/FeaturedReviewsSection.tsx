@@ -26,9 +26,10 @@ interface FeaturedReview {
 }
 
 const FeaturedReviewsSection = () => {
-  const { data: featuredReviews, isLoading } = useQuery({
+  const { data: featuredReviews, isLoading, error } = useQuery({
     queryKey: ['featuredReviews'],
     queryFn: async () => {
+      console.log('Fetching featured reviews...');
       const { data, error } = await supabase
         .from('reviews')
         .select(`
@@ -38,11 +39,21 @@ const FeaturedReviewsSection = () => {
         .eq('is_featured', true)
         .limit(6);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching featured reviews:", error);
+        throw error;
+      }
       
+      console.log('Featured reviews fetched:', data);
       return data as unknown as FeaturedReview[];
-    }
+    },
+    staleTime: 60000, // Cache for 1 minute
+    retry: 3, // Retry failed requests 3 times
   });
+
+  if (error) {
+    console.error("Error loading featured reviews:", error);
+  }
 
   return (
     <div className="bg-background py-16">
@@ -69,18 +80,19 @@ const FeaturedReviewsSection = () => {
         ) : featuredReviews && featuredReviews.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredReviews.map((review) => (
-              <ReviewCard 
-                key={review.id}
-                id={review.id}
-                title={review.title}
-                category={review.category.name}
-                image={review.image_url}
-                rating={review.rating}
-                brief={review.brief}
-                likesCount={review.likes_count}
-                commentsCount={review.comments_count}
-                tags={review.tags || []}
-              />
+              <Link key={review.id} to={`/review/${review.slug}`}>
+                <ReviewCard 
+                  id={review.id}
+                  title={review.title}
+                  category={review.category?.name || 'Uncategorized'}
+                  image={review.image_url}
+                  rating={review.rating}
+                  brief={review.brief}
+                  likesCount={review.likes_count}
+                  commentsCount={review.comments_count}
+                  tags={review.tags || []}
+                />
+              </Link>
             ))}
           </div>
         ) : (

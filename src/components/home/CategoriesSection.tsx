@@ -17,42 +17,57 @@ interface CategoryWithCount {
 }
 
 const CategoriesSection = () => {
-  const { data: categories, isLoading } = useQuery({
+  const { data: categories, isLoading, error } = useQuery({
     queryKey: ['homeCategories'],
     queryFn: async () => {
+      console.log('Fetching categories...');
       // First get all categories
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
         .select('*')
         .order('name');
       
-      if (categoriesError) throw categoriesError;
+      if (categoriesError) {
+        console.error("Error fetching categories:", categoriesError);
+        throw categoriesError;
+      }
       
-      // Then get counts using RPC function
-      const { data: countsData, error: countsError } = await supabase
-        .rpc('get_category_counts');
+      console.log('Categories fetched:', categoriesData);
       
-      if (countsError) {
-        console.error("Error fetching category counts:", countsError);
-        // Return categories without counts if RPC fails
-        return categoriesData.map((category: any) => ({
-          ...category,
-          count: 0
-        }));
+      // Then get counts using a simpler approach (RPC function may not exist yet)
+      const counts: Record<number, number> = {};
+      
+      try {
+        const { data: reviewsData, error: reviewsError } = await supabase
+          .from('reviews')
+          .select('category_id');
+        
+        if (!reviewsError && reviewsData) {
+          reviewsData.forEach((review: any) => {
+            if (review.category_id) {
+              counts[review.category_id] = (counts[review.category_id] || 0) + 1;
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error counting reviews per category:", error);
       }
       
       // Combine the data
-      const categoriesWithCounts = categoriesData.map((category: any) => {
-        const countData = countsData.find((item: any) => item.category_id === category.id);
-        return {
-          ...category,
-          count: countData ? countData.count : 0
-        };
-      });
+      const categoriesWithCounts = categoriesData.map((category: any) => ({
+        ...category,
+        count: counts[category.id] || 0
+      }));
       
       return categoriesWithCounts as CategoryWithCount[];
-    }
+    },
+    staleTime: 60000, // Cache for 1 minute
+    retry: 3, // Retry failed requests 3 times
   });
+
+  if (error) {
+    console.error("Error loading categories:", error);
+  }
 
   return (
     <div className="bg-background/50 py-16">
@@ -63,7 +78,7 @@ const CategoriesSection = () => {
             <p className="text-muted-foreground mt-2">Explore reviews organized by product categories</p>
           </div>
           <Button variant="ghost" asChild className="group">
-            <Link to="/categories" className="flex items-center gap-1">
+            <Link to="/categories" className="flex items-center gap-1 w-full h-full">
               All categories
               <ArrowRight className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
             </Link>
@@ -83,7 +98,7 @@ const CategoriesSection = () => {
                 <Card className="h-full glass hover:shadow-md transition-all duration-300 overflow-hidden group">
                   <CardContent className="p-6 flex flex-col items-center text-center h-full">
                     <div className="text-4xl mb-2 transition-transform group-hover:scale-110">
-                      {category.icon}
+                      {category.icon || '📦'}
                     </div>
                     <h3 className="font-medium text-lg mb-1">{category.name}</h3>
                     <p className="text-sm text-muted-foreground">
