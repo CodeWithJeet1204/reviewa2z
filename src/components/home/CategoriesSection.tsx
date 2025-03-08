@@ -34,7 +34,7 @@ const CategoriesSection = () => {
       
       console.log('Categories fetched:', categoriesData);
       
-      // Then get counts using a simpler approach (RPC function may not exist yet)
+      // Then get counts using a simpler approach
       const counts: Record<number, number> = {};
       
       try {

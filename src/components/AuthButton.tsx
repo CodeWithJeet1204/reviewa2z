@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -59,6 +60,16 @@ const AuthButton = () => {
     } finally {
       setAuthLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    // Navigate to home page after logout
+    navigate("/");
+  };
+
+  const handleProfileClick = () => {
+    navigate("/profile");
   };
 
   const resetForm = () => {
@@ -232,11 +243,11 @@ const AuthButton = () => {
           </div>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => navigate('/profile')}>
+        <DropdownMenuItem onClick={handleProfileClick}>
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => logout()}>
+        <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>

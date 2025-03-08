@@ -19,7 +19,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
     handleCommentSubmit,
     handleLikeComment,
     formatDate,
-    likeComment
+    likeComment,
+    error
   } = useComments(reviewId, commentsCount);
 
   const handleLoginClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -30,7 +31,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
   return (
     <div className="mt-8 space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold">Comments ({comments.length || commentsCount})</h3>
+        <h3 className="text-xl font-semibold">Comments ({comments?.length || commentsCount || 0})</h3>
       </div>
       
       <CommentForm
@@ -47,7 +48,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
         <div className="flex justify-center py-8">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
-      ) : comments.length > 0 ? (
+      ) : error ? (
+        <div className="text-center py-8">
+          {/* We don't show errors when there are no comments */}
+          <EmptyComments />
+        </div>
+      ) : comments && comments.length > 0 ? (
         <div className="space-y-4 staggered-fade">
           {comments.map((comment) => (
             <CommentItem 

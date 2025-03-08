@@ -12,53 +12,64 @@ export const useComments = (reviewId: string, commentsCount: number = 0) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: comments = [], isLoading } = useQuery({
+  const { data: comments = [], isLoading, error } = useQuery({
     queryKey: ['comments', reviewId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('comments')
-        .select(`
-          *,
-          profiles:user_id(display_name, avatar_url, username)
-        `)
-        .eq('review_id', reviewId)
-        .order('created_at', { ascending: false })
-        .is('parent_id', null);
+      try {
+        const { data, error } = await supabase
+          .from('comments')
+          .select(`
+            *,
+            profiles:user_id(display_name, avatar_url, username)
+          `)
+          .eq('review_id', reviewId)
+          .order('created_at', { ascending: false })
+          .is('parent_id', null);
 
-      if (error) {
-        console.error("Error fetching comments:", error);
-        toast.error("Failed to load comments");
-        throw error;
-      }
-      
-      let userLikes: Record<string, boolean> = {};
-      
-      if (isAuthenticated && user) {
-        const { data: likesData } = await supabase
-          .from('comment_likes')
-          .select('comment_id')
-          .eq('user_id', user.id);
-          
-        if (likesData) {
-          userLikes = likesData.reduce((acc: Record<string, boolean>, like) => {
-            acc[like.comment_id] = true;
-            return acc;
-          }, {});
+        if (error) {
+          console.error("Error fetching comments:", error);
+          // If we expect it might be because the table doesn't exist yet, don't show toast
+          if (commentsCount > 0) {
+            toast.error("Failed to load comments");
+          }
+          throw error;
         }
-      }
       
-      return (data || []).map((comment: DatabaseComment) => ({
-        id: comment.id,
-        author: {
-          name: comment.profiles?.display_name || 'Anonymous',
-          avatar: comment.profiles?.avatar_url,
-        },
-        content: comment.content,
-        date: comment.created_at,
-        likes: comment.likes_count || 0,
-        userLiked: !!userLikes[comment.id],
-        replies: [],
-      }));
+        let userLikes: Record<string, boolean> = {};
+      
+        if (isAuthenticated && user) {
+          const { data: likesData } = await supabase
+            .from('comment_likes')
+            .select('comment_id')
+            .eq('user_id', user.id);
+          
+          if (likesData) {
+            userLikes = likesData.reduce((acc: Record<string, boolean>, like) => {
+              acc[like.comment_id] = true;
+              return acc;
+            }, {});
+          }
+        }
+      
+        return (data || []).map((comment: DatabaseComment) => ({
+          id: comment.id,
+          author: {
+            name: comment.profiles?.display_name || 'Anonymous',
+            avatar: comment.profiles?.avatar_url,
+          },
+          content: comment.content,
+          date: comment.created_at,
+          likes: comment.likes_count || 0,
+          userLiked: !!userLikes[comment.id],
+          replies: [],
+        }));
+      } catch (err) {
+        // If there are no comments, just return an empty array instead of showing an error
+        if (commentsCount === 0) {
+          return [];
+        }
+        throw err;
+      }
     },
     refetchOnWindowFocus: false,
   });
@@ -191,5 +202,6 @@ export const useComments = (reviewId: string, commentsCount: number = 0) => {
     handleLikeComment,
     formatDate,
     likeComment,
+    error,
   };
 };

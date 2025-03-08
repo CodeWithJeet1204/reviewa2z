@@ -173,51 +173,66 @@ const ReviewPage = () => {
               <span className="text-sm text-muted-foreground">{review.likes_count} likes</span>
             </div>
           </div>
-          <p className="text-lg text-muted-foreground">{review.brief}</p>
         </div>
 
-        <div className="rounded-xl overflow-hidden mb-8 glass p-2 shadow-md">
-          <img
-            src={review.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'}
-            alt={review.title}
-            className="w-full h-auto rounded-lg object-cover"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div className="rounded-xl overflow-hidden glass p-2 shadow-md h-fit">
+            <img
+              src={review.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'}
+              alt={review.title}
+              className="w-full h-auto rounded-lg object-cover max-h-[500px]"
+            />
+          </div>
+          
+          <div className="glass p-6 rounded-xl">
+            <h3 className="text-xl font-semibold mb-4">AI Summary</h3>
+            <p className="leading-relaxed">{review.brief}</p>
+            
+            <div className="flex flex-wrap gap-2 mt-6">
+              {review.tags && review.tags.map((tag: string) => (
+                <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                  <Tag className="h-3 w-3" />
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+            
+            <div className="flex items-center gap-3 mt-6">
+              <Button 
+                variant={userLike ? "default" : "outline"} 
+                size="sm"
+                onClick={handleLikeReview}
+                disabled={likeLoading}
+                className="transition-all duration-300"
+              >
+                <ThumbsUp className={`h-4 w-4 mr-2 ${userLike ? 'fill-primary-foreground' : ''}`} />
+                {userLike ? 'Liked' : 'Like Review'}
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="#comments">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Leave a Comment
+                </a>
+              </Button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-8">
-          {review.tags && review.tags.map((tag: string) => (
-            <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-              <Tag className="h-3 w-3" />
-              {tag}
-            </Badge>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-3 mb-8">
-          <Button 
-            variant={userLike ? "default" : "outline"} 
-            size="sm"
-            onClick={handleLikeReview}
-            disabled={likeLoading}
-            className="transition-all duration-300"
-          >
-            <ThumbsUp className={`h-4 w-4 mr-2 ${userLike ? 'fill-primary-foreground' : ''}`} />
-            {userLike ? 'Liked' : 'Like Review'}
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <a href="#comments">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Leave a Comment
-            </a>
-          </Button>
-        </div>
-
-        <Tabs defaultValue="overview" className="mb-8">
+        <Tabs defaultValue="details" className="mb-8">
           <TabsList className="mb-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="details">Detailed Review</TabsTrigger>
+            <TabsTrigger value="overview">Pros & Cons</TabsTrigger>
             <TabsTrigger value="specs">Specifications</TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="details" className="glass p-6 rounded-xl space-y-4">
+            <h3 className="text-xl font-semibold mb-4">Detailed AI Review</h3>
+            <div className="prose prose-lg dark:prose-invert max-w-none">
+              {review.content?.split('\n').map((paragraph: string, index: number) => (
+                <p key={index} className="mb-4">{paragraph}</p>
+              ))}
+            </div>
+          </TabsContent>
           
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -253,20 +268,6 @@ const ReviewPage = () => {
                 </ul>
               </div>
             </div>
-            
-            <div className="glass p-6 rounded-xl">
-              <h3 className="text-xl font-semibold mb-4">AI Summary</h3>
-              <p className="leading-relaxed">{review.brief}</p>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="details" className="glass p-6 rounded-xl space-y-4">
-            <h3 className="text-xl font-semibold mb-4">Detailed AI Review</h3>
-            <div className="prose prose-lg dark:prose-invert max-w-none">
-              {review.content?.split('\n').map((paragraph: string, index: number) => (
-                <p key={index} className="mb-4">{paragraph}</p>
-              ))}
-            </div>
           </TabsContent>
           
           <TabsContent value="specs" className="glass p-6 rounded-xl">
@@ -288,7 +289,7 @@ const ReviewPage = () => {
 
         <div id="comments" className="pt-4">
           <h2 className="text-2xl font-semibold mb-6">Comments</h2>
-          <CommentSection reviewId={review.id} />
+          <CommentSection reviewId={review.id} commentsCount={review.comments_count} />
         </div>
       </main>
       <Footer />
