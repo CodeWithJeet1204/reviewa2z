@@ -58,12 +58,12 @@ const HeroSection = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="transition-all duration-300 hover:scale-[1.02] w-full h-14" asChild>
+              <Button size="lg" className="transition-all duration-300 hover:scale-[1.02] w-full h-16" asChild>
                 <Link to="/search" className="w-full h-full flex items-center justify-center">
                   <Search className="mr-2 h-5 w-5" /> Explore Reviews
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" className="w-full h-14" asChild>
+              <Button variant="outline" size="lg" className="w-full h-16" asChild>
                 <Link to="/about" className="w-full h-full flex items-center justify-center">
                   How It Works <ChevronRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -83,7 +83,7 @@ const HeroSection = () => {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">
-                Trusted by <span className="font-medium text-foreground">10,000+</span> users
+                Trusted by <span className="font-medium text-foreground">tech enthusiasts worldwide</span>
               </p>
             </div>
           </div>

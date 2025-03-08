@@ -77,10 +77,9 @@ const CategoriesSection = () => {
             <h2 className="text-3xl font-bold tracking-tight">Browse by Category</h2>
             <p className="text-muted-foreground mt-2">Explore reviews organized by product categories</p>
           </div>
-          <Button variant="ghost" asChild className="group">
-            <Link to="/categories" className="flex items-center gap-1 w-full h-full">
-              All categories
-              <ArrowRight className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
+          <Button variant="ghost" size="icon" asChild className="group p-2">
+            <Link to="/categories" className="flex items-center justify-center">
+              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
           </Button>
         </div>

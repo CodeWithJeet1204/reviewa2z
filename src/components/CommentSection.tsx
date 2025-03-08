@@ -48,11 +48,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ reviewId, commentsCount
         <div className="flex justify-center py-8">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
-      ) : error ? (
-        <div className="text-center py-8">
-          {/* We don't show errors when there are no comments */}
-          <EmptyComments />
-        </div>
       ) : comments && comments.length > 0 ? (
         <div className="space-y-4 staggered-fade">
           {comments.map((comment) => (
