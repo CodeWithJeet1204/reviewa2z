@@ -306,7 +306,7 @@ const HeroSection = () => {
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) {
-      e.preventDefault();
+    e.preventDefault();
     }
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
@@ -352,8 +352,8 @@ const HeroSection = () => {
             position={position}
           />
         ))}
-      </div>
-
+            </div>
+            
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-radial from-transparent via-background/30 to-background pointer-events-none" />
 
@@ -377,7 +377,7 @@ const HeroSection = () => {
               onKeyDown={handleKeyDown}
               className="pl-10 pr-4 w-full transition-all border-2 bg-background/90 backdrop-blur-sm hover:bg-background focus:bg-background shadow-lg"
             />
-          </div>
+                </div>
           <Button 
             onClick={() => handleSearch()} 
             size="icon"
@@ -453,7 +453,7 @@ const HeroSection = () => {
             >
               <Star className="h-6 w-6 text-primary" />
             </motion.div>
-          </div>
+                      </div>
           <motion.p 
             className="text-base text-muted-foreground"
             initial={{ opacity: 0 }}
