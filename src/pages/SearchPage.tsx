@@ -266,7 +266,7 @@ const SearchPage = () => {
             <p className="text-muted-foreground mb-6">Found {reviews.length} results</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {reviews.map((review) => (
-                <ReviewCard key={review.id} {...review} />
+                <ReviewCard key={review.id} review={review} />
               ))}
             </div>
           </>

@@ -1,116 +1,96 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Star } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { StarIcon, MessageSquare } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import LikeButton from '@/components/LikeButton';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
-export interface ReviewCardProps {
+interface Review {
   id: string;
   title: string;
-  category: string;
-  image: string;
+  slug: string;
   rating: number;
   brief: string;
-  commentsCount: number;
-  likesCount: number;
-  tags: string[];
-  userLiked?: boolean;
+  image_url?: string;
+  category_id: string;
+  comments_count: number;
+  tags?: string[];
+  category?: {
+    name: string;
+    slug: string;
+  };
 }
 
-const ReviewCard: React.FC<ReviewCardProps> = ({
-  id,
-  title,
-  category,
-  image,
-  rating,
-  brief,
-  commentsCount,
-  likesCount,
-  tags,
-  userLiked = false,
-}) => {
-  // Generate stars based on rating
-  const renderStars = () => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <StarIcon
-          key={i}
-          className={cn(
-            "h-4 w-4 transition-transform",
-            i <= rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300",
-            i <= rating && "animate-scale-in"
-          )}
-          style={{ animationDelay: `${i * 100}ms` }}
-        />
-      );
-    }
-    return stars;
+interface ReviewCardProps {
+  review: Review;
+}
+
+const ReviewCard = ({ review }: ReviewCardProps) => {
+  const {
+    title,
+    slug,
+    rating = 0,
+    brief = '',
+    image_url = '',
+    category,
+    tags = []
+  } = review;
+
+  const handleCategoryClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
   };
 
   return (
-    <Link to={`/review/${id}`}>
-      <Card className="overflow-hidden transition-all duration-300 h-full hover:shadow-md hover:scale-[1.02] group">
-        <div className="relative aspect-[16/9] overflow-hidden bg-muted">
+    <Link to={`/review/${slug}`} className="block">
+      <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg h-full">
+        <AspectRatio ratio={16 / 9}>
           <img
-            src={image}
+            src={image_url || '/placeholder-image.jpg'}
             alt={title}
-            className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
-            loading="lazy"
+            className="object-cover w-full h-full"
           />
-          <div className="absolute top-3 left-3 z-10">
-            <Badge className="bg-primary/90 backdrop-blur-sm text-xs">
-              {category}
-            </Badge>
+        </AspectRatio>
+
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between gap-4 mb-2">
+            {category && (
+              <Link
+                to={`/category/${category.slug}`}
+                className="text-sm text-muted-foreground hover:text-primary relative z-10"
+                onClick={handleCategoryClick}
+              >
+                {category.name}
+              </Link>
+            )}
+            <div className="flex items-center gap-1">
+              <Star className="h-4 w-4 text-yellow-500" />
+              <span className="text-sm font-medium">{rating}</span>
+            </div>
           </div>
-        </div>
-        
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex">{renderStars()}</div>
-            <span className="text-sm font-medium text-primary">{rating.toFixed(1)}</span>
-          </div>
-          
-          <h3 className="font-semibold text-lg mb-2 line-clamp-2">{title}</h3>
-          
-          <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
+
+          <h3 className="text-lg font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+            {title}
+          </h3>
+
+          <p className="text-muted-foreground text-sm line-clamp-2 mb-4">
             {brief}
           </p>
-          
-          <div className="flex flex-wrap gap-1">
-            {tags.slice(0, 2).map((tag, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-            {tags.length > 2 && (
-              <Badge variant="outline" className="text-xs">
-                +{tags.length - 2} more
-              </Badge>
-            )}
-          </div>
+
+          {tags && tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {tags.slice(0, 3).map((tag) => (
+                <Badge key={tag} variant="secondary" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+              {tags.length > 3 && (
+                <Badge variant="secondary" className="text-xs">
+                  +{tags.length - 3} more
+                </Badge>
+              )}
+            </div>
+          )}
         </CardContent>
-        
-        <CardFooter className="px-5 py-3 border-t flex justify-between text-sm text-muted-foreground">
-          <div className="flex items-center">
-            <MessageSquare className="h-4 w-4 mr-1" />
-            <span>{commentsCount} comments</span>
-          </div>
-          <div 
-            onClick={(e) => {
-              e.preventDefault(); // Prevent Link navigation
-            }}
-          >
-            <LikeButton 
-              reviewId={id} 
-              initialLikesCount={likesCount} 
-              initialLikedByUser={userLiked}
-            />
-          </div>
-        </CardFooter>
       </Card>
     </Link>
   );

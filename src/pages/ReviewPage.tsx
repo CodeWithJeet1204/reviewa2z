@@ -1,8 +1,7 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Star, ThumbsUp, MessageSquare, ChevronRight, ExternalLink, Tag } from 'lucide-react';
+import { Star, Tag, Calendar } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CommentSection from '@/components/CommentSection';
@@ -10,18 +9,17 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const ReviewPage = () => {
   const { slug } = useParams();
-  const { isAuthenticated, user } = useAuth();
-  const [likeLoading, setLikeLoading] = useState(false);
 
-  const { data: review, isLoading, error, refetch } = useQuery({
+  const { data: review, isLoading, error } = useQuery({
     queryKey: ['review', slug],
     queryFn: async () => {
+      if (!slug) throw new Error('Review slug is required');
+
       const { data, error } = await supabase
         .from('reviews')
         .select(`
@@ -32,71 +30,21 @@ const ReviewPage = () => {
         .single();
       
       if (error) throw error;
-      return data;
+      if (!data) throw new Error('Review not found');
+      
+      return {
+        ...data,
+        content: data.content || '',
+        pros: data.pros || [],
+        cons: data.cons || [],
+        tags: data.tags || [],
+        specs: data.specs || {},
+        rating: data.rating || 0,
+        comments_count: data.comments_count || 0,
+        category: data.category || { name: 'Uncategorized', slug: 'uncategorized' }
+      };
     }
   });
-
-  const { data: userLike } = useQuery({
-    queryKey: ['reviewLike', slug, user?.id],
-    queryFn: async () => {
-      if (!user || !review) return null;
-      
-      const { data } = await supabase
-        .from('review_likes')
-        .select('*')
-        .eq('review_id', review.id)
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      return data;
-    },
-    enabled: !!user && !!review
-  });
-
-  const handleLikeReview = async () => {
-    if (!isAuthenticated) {
-      toast.error("Please sign in to like reviews");
-      return;
-    }
-
-    if (!review) return;
-
-    setLikeLoading(true);
-    try {
-      if (userLike) {
-        await supabase
-          .from('review_likes')
-          .delete()
-          .eq('review_id', review.id)
-          .eq('user_id', user.id);
-          
-        await supabase
-          .from('reviews')
-          .update({ likes_count: Math.max(0, review.likes_count - 1) })
-          .eq('id', review.id);
-      } else {
-        await supabase
-          .from('review_likes')
-          .insert({
-            review_id: review.id,
-            user_id: user.id
-          });
-          
-        await supabase
-          .from('reviews')
-          .update({ likes_count: (review.likes_count || 0) + 1 })
-          .eq('id', review.id);
-      }
-      
-      refetch();
-      toast.success(userLike ? "Review unliked" : "Review liked");
-    } catch (error) {
-      console.error("Error toggling like:", error);
-      toast.error("Failed to process your action");
-    } finally {
-      setLikeLoading(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -117,14 +65,14 @@ const ReviewPage = () => {
     return (
       <div className="min-h-screen">
         <Navbar />
-        <div className="container px-4 md:px-6 mx-auto py-16 flex items-center justify-center">
+        <div className="container px-4 md:px-6 mx-auto py-16">
           <div className="text-center">
-            <h1 className="text-3xl font-bold mb-4">Review Not Found</h1>
-            <p className="text-lg text-muted-foreground mb-6">
-              We couldn't find the review you're looking for.
+            <h1 className="text-2xl font-bold mb-4">Review not found</h1>
+            <p className="text-muted-foreground mb-8">
+              The review you're looking for doesn't exist or has been removed.
             </p>
             <Button asChild>
-              <Link to="/">Return to Homepage</Link>
+              <Link to="/">Return Home</Link>
             </Button>
           </div>
         </div>
@@ -133,163 +81,158 @@ const ReviewPage = () => {
     );
   }
 
-  const pros = review.pros || [];
-  const cons = review.cons || [];
-  const specs = review.specs || {};
+  // Ensure content is a string before splitting
+  const contentParagraphs = typeof review.content === 'string' 
+    ? review.content.split('\n\n')
+    : [];
 
   return (
     <div className="min-h-screen">
       <Navbar />
-      <main className="container px-4 md:px-6 mx-auto py-8 mt-24">
-        <div className="flex items-center text-sm mb-4 text-muted-foreground">
+      <main className="container px-4 md:px-6 mx-auto py-12 mt-24">
+        {/* Breadcrumbs */}
+        <div className="flex items-center text-sm mb-8 text-muted-foreground">
           <Link to="/" className="hover:text-primary">Home</Link>
-          <ChevronRight className="h-4 w-4 mx-1" />
-          <Link to={`/category/${review.category?.slug}`} className="hover:text-primary">
-            {review.category?.name}
+          <Link to={`/category/${review.category?.slug || 'uncategorized'}`} className="hover:text-primary">
+            {review.category?.name || 'Uncategorized'}
           </Link>
-          <ChevronRight className="h-4 w-4 mx-1" />
-          <span className="text-foreground">{review.title}</span>
+          <Link to={`/review/${review.slug}`} className="hover:text-primary">
+            {review.title}
+          </Link>
         </div>
 
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">{review.title}</h1>
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            <div className="flex items-center">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-5 w-5 ${i < Math.round(review.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-                />
-              ))}
-              <span className="ml-2 font-medium">{review.rating.toFixed(1)}</span>
-            </div>
-            <Separator orientation="vertical" className="h-5" />
-            <div className="flex items-center gap-1">
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{review.comments_count} comments</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <ThumbsUp className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{review.likes_count} likes</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <div className="rounded-xl overflow-hidden glass p-2 shadow-md h-fit">
-            <img
-              src={review.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'}
-              alt={review.title}
-              className="w-full h-auto rounded-lg object-cover max-h-[500px]"
-            />
-          </div>
-          
-          <div className="glass p-6 rounded-xl">
-            <h3 className="text-xl font-semibold mb-4">AI Summary</h3>
-            <p className="leading-relaxed">{review.brief}</p>
-            
-            <div className="flex flex-wrap gap-2 mt-6">
-              {review.tags && review.tags.map((tag: string) => (
-                <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-                  <Tag className="h-3 w-3" />
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-            
-            <div className="flex items-center gap-3 mt-6">
-              <Button 
-                variant={userLike ? "default" : "outline"} 
-                size="sm"
-                onClick={handleLikeReview}
-                disabled={likeLoading}
-                className="transition-all duration-300"
-              >
-                <ThumbsUp className={`h-4 w-4 mr-2 ${userLike ? 'fill-primary-foreground' : ''}`} />
-                {userLike ? 'Liked' : 'Like Review'}
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <a href="#comments">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Leave a Comment
-                </a>
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <Tabs defaultValue="details" className="mb-8">
-          <TabsList className="mb-4">
-            <TabsTrigger value="details">Detailed Review</TabsTrigger>
-            <TabsTrigger value="overview">Pros & Cons</TabsTrigger>
-            <TabsTrigger value="specs">Specifications</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="details" className="glass p-6 rounded-xl space-y-4">
-            <h3 className="text-xl font-semibold mb-4">Detailed AI Review</h3>
-            <div className="prose prose-lg dark:prose-invert max-w-none">
-              {review.content?.split('\n').map((paragraph: string, index: number) => (
-                <p key={index} className="mb-4">{paragraph}</p>
-              ))}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="glass p-6 rounded-xl">
-                <h3 className="text-xl font-semibold mb-4 text-green-600 dark:text-green-400">Pros</h3>
-                <ul className="space-y-2">
-                  {pros && pros.length > 0 ? (
-                    pros.map((pro: string, index: number) => (
-                      <li key={index} className="flex items-start">
-                        <span className="text-green-600 dark:text-green-400 mr-2">✓</span>
-                        <span>{pro}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <li>No pros specified for this product.</li>
-                  )}
-                </ul>
+        {/* Main Content */}
+        <div className="flex flex-col lg:flex-row gap-12 mb-12">
+          {/* Image Section - 40% width */}
+          <div className="lg:w-[40%]">
+            <div className="sticky top-32">
+              <div className="rounded-xl overflow-hidden shadow-lg bg-muted">
+                <div className="aspect-[4/3] relative">
+                  <img 
+                    src={review.image_url || '/placeholder-image.jpg'} 
+                    alt={review.title}
+                    className="w-full h-full object-cover absolute inset-0"
+                  />
+                </div>
               </div>
               
-              <div className="glass p-6 rounded-xl">
-                <h3 className="text-xl font-semibold mb-4 text-red-600 dark:text-red-400">Cons</h3>
-                <ul className="space-y-2">
-                  {cons && cons.length > 0 ? (
-                    cons.map((con: string, index: number) => (
-                      <li key={index} className="flex items-start">
-                        <span className="text-red-600 dark:text-red-400 mr-2">✗</span>
-                        <span>{con}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <li>No cons specified for this product.</li>
-                  )}
-                </ul>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="specs" className="glass p-6 rounded-xl">
-            <h3 className="text-xl font-semibold mb-4">Technical Specifications</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(specs).length > 0 ? (
-                Object.entries(specs).map(([key, value]) => (
-                  <div key={key} className="flex justify-between border-b pb-2">
-                    <span className="font-medium">{key}</span>
-                    <span>{String(value)}</span>
+              {/* Quick Stats */}
+              <div className="mt-8">
+                <div className="glass rounded-xl p-6 text-center">
+                  <div className="flex items-center justify-center mb-3">
+                    <Star className="h-6 w-6 text-yellow-500 mr-2" />
+                    <span className="text-3xl font-bold">{review.rating}</span>
                   </div>
-                ))
-              ) : (
-                <p>No technical specifications available for this product.</p>
+                  <p className="text-sm font-medium text-muted-foreground">Rating</p>
+                </div>
+              </div>
+
+              {/* Tags */}
+              {review.tags && review.tags.length > 0 && (
+                <div className="mt-8 glass rounded-xl p-6">
+                  <h3 className="text-base font-medium mb-4 flex items-center">
+                    <Tag className="h-4 w-4 mr-2" />
+                    Tags
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {review.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="px-3 py-1 text-sm">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
 
-        <div id="comments" className="pt-4">
-          <h2 className="text-2xl font-semibold mb-6">Comments</h2>
-          <CommentSection reviewId={review.id} commentsCount={review.comments_count} />
+          {/* Content Section - 60% width */}
+          <div className="lg:w-[60%]">
+            {/* Review Header */}
+            <div className="mb-10">
+              <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">{review.title}</h1>
+              <div className="flex items-center gap-6 text-sm text-muted-foreground mb-8">
+                <div className="flex items-center">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  {format(new Date(review.created_at), 'MMMM d, yyyy')}
+                </div>
+                <div className="flex items-center">
+                  <Tag className="h-4 w-4 mr-2" />
+                  {review.category?.name}
+                </div>
+              </div>
+              {review.brief && (
+                <p className="text-xl leading-relaxed text-muted-foreground">
+                  {review.brief}
+                </p>
+              )}
+            </div>
+
+            <Tabs defaultValue="review" className="space-y-10">
+              <TabsList className="w-full p-1">
+                <TabsTrigger value="review" className="flex-1 py-3">Review</TabsTrigger>
+                <TabsTrigger value="specs" className="flex-1 py-3">Specifications</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="review" className="space-y-10">
+                {/* Main Content */}
+                <div className="prose prose-lg dark:prose-invert max-w-none">
+                  {contentParagraphs.map((paragraph, index) => (
+                    <p key={index} className="text-lg leading-relaxed">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+
+                <Separator className="my-12" />
+
+                {/* Pros & Cons */}
+                <div className="grid sm:grid-cols-2 gap-8">
+                  <div className="glass rounded-xl p-8">
+                    <h3 className="text-2xl font-semibold text-green-500 mb-6">Pros</h3>
+                    <ul className="space-y-4">
+                      {Array.isArray(review.pros) && review.pros.map((pro, index) => (
+                        <li key={index} className="flex items-start text-lg">
+                          <span className="text-green-500 mr-3 font-bold">+</span>
+                          {pro}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="glass rounded-xl p-8">
+                    <h3 className="text-2xl font-semibold text-red-500 mb-6">Cons</h3>
+                    <ul className="space-y-4">
+                      {Array.isArray(review.cons) && review.cons.map((con, index) => (
+                        <li key={index} className="flex items-start text-lg">
+                          <span className="text-red-500 mr-3 font-bold">-</span>
+                          {con}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="specs">
+                <div className="glass rounded-xl p-8">
+                  <div className="grid gap-6">
+                    {review.specs && typeof review.specs === 'object' && Object.entries(review.specs).map(([key, value]) => (
+                      <div key={key} className="grid grid-cols-2 gap-6 py-4 border-b last:border-0">
+                        <div className="font-medium text-lg">{key}</div>
+                        <div className="text-muted-foreground text-lg">{value as string}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            {/* Comments Section */}
+            <div className="mt-16">
+              <CommentSection reviewId={review.id} commentsCount={review.comments_count} />
+            </div>
+          </div>
         </div>
       </main>
       <Footer />

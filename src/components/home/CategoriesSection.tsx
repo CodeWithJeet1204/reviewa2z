@@ -1,9 +1,6 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 
@@ -20,8 +17,6 @@ const CategoriesSection = () => {
   const { data: categories, isLoading, error } = useQuery({
     queryKey: ['homeCategories'],
     queryFn: async () => {
-      console.log('Fetching categories...');
-      // First get all categories
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
         .select('*')
@@ -31,8 +26,6 @@ const CategoriesSection = () => {
         console.error("Error fetching categories:", categoriesError);
         throw categoriesError;
       }
-      
-      console.log('Categories fetched:', categoriesData);
       
       // Then get counts using a simpler approach
       const counts: Record<number, number> = {};
@@ -61,8 +54,8 @@ const CategoriesSection = () => {
       
       return categoriesWithCounts as CategoryWithCount[];
     },
-    staleTime: 60000, // Cache for 1 minute
-    retry: 3, // Retry failed requests 3 times
+    staleTime: 60000,
+    retry: 3,
   });
 
   if (error) {
@@ -70,18 +63,11 @@ const CategoriesSection = () => {
   }
 
   return (
-    <div className="bg-background/50 py-16">
+    <div className="bg-background/50">
       <div className="container px-4 md:px-6 mx-auto">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Browse by Category</h2>
-            <p className="text-muted-foreground mt-2">Explore reviews organized by product categories</p>
-          </div>
-          <Button variant="ghost" size="icon" asChild className="group p-2">
-            <Link to="/categories" className="flex items-center justify-center">
-              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </Button>
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold tracking-tight">Browse by Category</h2>
+          <p className="text-muted-foreground mt-2">Explore reviews organized by product categories</p>
         </div>
         
         {isLoading ? (
@@ -93,8 +79,12 @@ const CategoriesSection = () => {
         ) : categories && categories.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {categories.map((category) => (
-              <Link key={category.id} to={`/category/${category.slug}`}>
-                <Card className="h-full glass hover:shadow-md transition-all duration-300 overflow-hidden group">
+              <Link 
+                key={category.id} 
+                to={`/category/${category.slug}`}
+                className="block h-full transition-all duration-300 hover:scale-[1.02]"
+              >
+                <Card className="h-full glass hover:shadow-md transition-all duration-300 overflow-hidden">
                   <CardContent className="p-6 flex flex-col items-center text-center h-full">
                     <div className="text-4xl mb-2 transition-transform group-hover:scale-110">
                       {category.icon || '📦'}

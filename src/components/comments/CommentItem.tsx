@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThumbsUp } from 'lucide-react';
@@ -47,7 +46,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
             <Button 
               variant="ghost" 
               size="sm" 
-              className="flex items-center gap-1 text-xs"
+              className="flex items-center gap-1 text-xs px-3 py-2 -ml-3 hover:bg-accent"
               onClick={handleLike}
               disabled={isLikeLoading}
             >
