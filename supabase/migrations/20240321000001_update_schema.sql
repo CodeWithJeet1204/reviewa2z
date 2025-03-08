@@ -24,7 +24,9 @@ WITH CHECK (true);
 -- Update comments table
 ALTER TABLE comments
 ADD COLUMN IF NOT EXISTS display_name text,
-ADD COLUMN IF NOT EXISTS anonymous_id uuid DEFAULT gen_random_uuid();
+ADD COLUMN IF NOT EXISTS anonymous_id uuid DEFAULT gen_random_uuid(),
+ADD COLUMN IF NOT EXISTS content text NOT NULL,
+ADD COLUMN IF NOT EXISTS review_id uuid NOT NULL REFERENCES reviews(id) ON DELETE CASCADE;
 
 -- Create index for better performance
 CREATE INDEX IF NOT EXISTS comments_review_id_idx ON comments(review_id);
@@ -61,7 +63,7 @@ BEGIN
   -- Return the new comment
   RETURN json_build_object(
     'id', v_comment.id,
-    'content', v_content,
+    'content', v_comment.content,
     'display_name', v_comment.display_name,
     'created_at', v_comment.created_at
   );

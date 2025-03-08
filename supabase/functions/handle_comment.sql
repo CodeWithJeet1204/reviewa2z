@@ -25,7 +25,7 @@ BEGIN
   SET comments_count = comments_count + 1
   WHERE id = p_review_id;
 
-  -- Return the new comment
+  -- Return the new comment with correct variable reference
   RETURN json_build_object(
     'id', v_comment.id,
     'content', v_comment.content,

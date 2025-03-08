@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Star, Tag, Calendar } from 'lucide-react';
+import { Star, Tag, Calendar, Plus, Minus } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CommentSection from '@/components/CommentSection';
@@ -168,13 +168,23 @@ const ReviewPage = () => {
               )}
             </div>
 
-            <Tabs defaultValue="review" className="space-y-10">
-              <TabsList className="w-full p-1">
-                <TabsTrigger value="review" className="flex-1 py-3">Review</TabsTrigger>
-                <TabsTrigger value="specs" className="flex-1 py-3">Specifications</TabsTrigger>
+            <Tabs defaultValue="review" className="w-full space-y-8">
+              <TabsList className="w-full grid grid-cols-2 gap-4 p-1 h-14 bg-background/95 backdrop-blur-sm rounded-xl">
+                <TabsTrigger 
+                  value="review" 
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 text-lg font-medium rounded-lg"
+                >
+                  Review
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="specs" 
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 text-lg font-medium rounded-lg"
+                >
+                  Specifications
+                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="review" className="space-y-10">
+              <TabsContent value="review" className="space-y-10 animate-in fade-in-50 duration-500">
                 {/* Main Content */}
                 <div className="prose prose-lg dark:prose-invert max-w-none">
                   {contentParagraphs.map((paragraph, index) => (
@@ -187,26 +197,36 @@ const ReviewPage = () => {
                 <Separator className="my-12" />
 
                 {/* Pros & Cons */}
-                <div className="grid sm:grid-cols-2 gap-8">
-                  <div className="glass rounded-xl p-8">
-                    <h3 className="text-2xl font-semibold text-green-500 mb-6">Pros</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="glass rounded-xl p-8 bg-background/50 backdrop-blur-sm border border-border/50 hover:border-primary/20 transition-colors duration-300">
+                    <h3 className="text-2xl font-semibold text-green-500 mb-6 flex items-center gap-2">
+                      <span className="inline-block p-2 rounded-lg bg-green-500/10">
+                        <Plus className="h-5 w-5 text-green-500" />
+                      </span>
+                      Pros
+                    </h3>
                     <ul className="space-y-4">
                       {Array.isArray(review.pros) && review.pros.map((pro, index) => (
-                        <li key={index} className="flex items-start text-lg">
-                          <span className="text-green-500 mr-3 font-bold">+</span>
-                          {pro}
+                        <li key={index} className="flex items-start text-lg group">
+                          <span className="text-green-500 mr-3 font-bold transition-transform duration-300 group-hover:scale-110">+</span>
+                          <span className="group-hover:text-foreground/90 transition-colors duration-300">{pro}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
 
-                  <div className="glass rounded-xl p-8">
-                    <h3 className="text-2xl font-semibold text-red-500 mb-6">Cons</h3>
+                  <div className="glass rounded-xl p-8 bg-background/50 backdrop-blur-sm border border-border/50 hover:border-primary/20 transition-colors duration-300">
+                    <h3 className="text-2xl font-semibold text-red-500 mb-6 flex items-center gap-2">
+                      <span className="inline-block p-2 rounded-lg bg-red-500/10">
+                        <Minus className="h-5 w-5 text-red-500" />
+                      </span>
+                      Cons
+                    </h3>
                     <ul className="space-y-4">
                       {Array.isArray(review.cons) && review.cons.map((con, index) => (
-                        <li key={index} className="flex items-start text-lg">
-                          <span className="text-red-500 mr-3 font-bold">-</span>
-                          {con}
+                        <li key={index} className="flex items-start text-lg group">
+                          <span className="text-red-500 mr-3 font-bold transition-transform duration-300 group-hover:scale-110">-</span>
+                          <span className="group-hover:text-foreground/90 transition-colors duration-300">{con}</span>
                         </li>
                       ))}
                     </ul>
@@ -214,13 +234,16 @@ const ReviewPage = () => {
                 </div>
               </TabsContent>
 
-              <TabsContent value="specs">
-                <div className="glass rounded-xl p-8">
+              <TabsContent value="specs" className="animate-in fade-in-50 duration-500">
+                <div className="glass rounded-xl p-8 bg-background/50 backdrop-blur-sm border border-border/50">
                   <div className="grid gap-6">
-                    {review.specs && typeof review.specs === 'object' && Object.entries(review.specs).map(([key, value]) => (
-                      <div key={key} className="grid grid-cols-2 gap-6 py-4 border-b last:border-0">
-                        <div className="font-medium text-lg">{key}</div>
-                        <div className="text-muted-foreground text-lg">{value as string}</div>
+                    {review.specs && typeof review.specs === 'object' && Object.entries(review.specs).map(([key, value], index) => (
+                      <div 
+                        key={key} 
+                        className="grid grid-cols-2 gap-6 py-4 border-b last:border-0 hover:bg-primary/5 transition-colors duration-300 rounded-lg px-4"
+                      >
+                        <div className="font-medium text-lg text-foreground/80">{key}</div>
+                        <div className="text-foreground text-lg">{value as string}</div>
                       </div>
                     ))}
                   </div>
