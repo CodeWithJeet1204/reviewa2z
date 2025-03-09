@@ -2,6 +2,7 @@ import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/providers/ThemeProvider';
+import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from 'sonner';
 import AppRoutes from '@/components/AppRoutes';
 
@@ -50,7 +51,9 @@ class ErrorBoundary extends React.Component<
             </p>
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <pre className="text-sm bg-muted p-4 rounded-md mb-4 overflow-auto text-left">
-                {this.state.error.message}
+                {this.state.error.message},
+                {this.state.error.name},
+                {this.state.error.stack}
               </pre>
             )}
             <div className="space-y-2">
@@ -96,18 +99,20 @@ function App() {
   }, []);
 
   return (
-    <ThemeProvider>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <Suspense fallback={<LoadingFallback />}>
-            <Router>
-              <AppRoutes />
-              <Toaster richColors position="top-right" />
-            </Router>
-          </Suspense>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider>
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <Suspense fallback={<LoadingFallback />}>
+              <Router>
+                <AppRoutes />
+                <Toaster richColors position="top-right" />
+              </Router>
+            </Suspense>
+          </QueryClientProvider>
+        </ErrorBoundary>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }
 
