@@ -1,13 +1,10 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { Database } from '@/types/database.types';
 
-interface Comment {
-  id: string;
-  content: string;
-  display_name: string | null;
-  created_at: string;
-}
+type Comment = Database['public']['Tables']['comments']['Row'];
 
 interface AddCommentParams {
   content: string;
