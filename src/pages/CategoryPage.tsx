@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -26,6 +27,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Check } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Helmet } from 'react-helmet-async';
 
 // Categories that have filterable attributes
 const FILTERABLE_CATEGORIES = {
@@ -543,7 +545,7 @@ const CategoryPage = () => {
     }
   });
 
-  // Fetch reviews
+  // Fetch reviews with new data structure
   const { data: reviews = [], isLoading: reviewsLoading } = useQuery({
     queryKey: ['categoryReviews', slug, sortBy, searchTerm, selectedTags, selectedFilters],
     queryFn: async () => {
@@ -554,9 +556,12 @@ const CategoryPage = () => {
         .select('*')
         .eq('category_id', category.id);
       
+      // If status field exists, only get published reviews
+      query = query.eq('status', 'published');
+      
       // Apply search filter if provided
       if (searchTerm) {
-        query = query.ilike('title', `%${searchTerm}%`);
+        query = query.or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%,brief.ilike.%${searchTerm}%`);
       }
       
       // Apply tag filters if any are selected
@@ -568,8 +573,12 @@ const CategoryPage = () => {
       if (hasFilters && Object.keys(selectedFilters).length > 0) {
         Object.entries(selectedFilters).forEach(([filter, value]) => {
           if (value) {
-            // Add the filter to the specs JSON field
-            query = query.contains('specs', { [filter]: value });
+            // Check if we should use the product field or specs field
+            if (filter.includes('brand') || filter.includes('price')) {
+              query = query.contains('product', { [filter]: value });
+            } else {
+              query = query.contains('specs', { [filter]: value });
+            }
           }
         });
       }
@@ -585,15 +594,22 @@ const CategoryPage = () => {
         case 'most_liked':
           query = query.order('likes_count', { ascending: false });
           break;
+        case 'most_viewed':
+          query = query.order('view_count', { ascending: false });
+          break;
         case 'latest':
         default:
-          query = query.order('created_at', { ascending: false });
+          query = query.order('published_at', { ascending: false });
           break;
       }
       
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching reviews:', error);
+        throw error;
+      }
+      
       return data || [];
     },
     enabled: !!category?.id
@@ -676,8 +692,30 @@ const CategoryPage = () => {
     );
   }
 
+  // Generate category meta title and description for SEO
+  const metaTitle = `${category.name} Reviews & Comparisons | Honest & Detailed Analysis`;
+  const metaDescription = category.description || 
+    `Explore our collection of ${category.name} reviews. Find honest opinions, detailed analysis, and pros & cons for the best products.`;
+
   return (
     <div className="min-h-screen">
+      <Helmet>
+        <title>{metaTitle}</title>
+        <meta name="description" content={metaDescription} />
+        <meta name="keywords" content={`${category.name},reviews,comparison,analysis,best ${category.name},top ${category.name}`} />
+        <link rel="canonical" href={`/category/${category.slug}`} />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content={metaTitle} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`/category/${category.slug}`} />
+        
+        {/* Twitter */}
+        <meta name="twitter:title" content={metaTitle} />
+        <meta name="twitter:description" content={metaDescription} />
+      </Helmet>
+      
       <Navbar />
       <main className="container px-4 md:px-6 mx-auto py-8 mt-24">
         {/* Breadcrumbs */}
@@ -721,6 +759,7 @@ const CategoryPage = () => {
                   <SelectItem value="highest_rated">Highest Rated</SelectItem>
                   <SelectItem value="most_commented">Most Commented</SelectItem>
                   <SelectItem value="most_liked">Most Liked</SelectItem>
+                  <SelectItem value="most_viewed">Most Viewed</SelectItem>
                 </SelectContent>
               </Select>
               {hasFilters && (

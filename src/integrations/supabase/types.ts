@@ -178,60 +178,102 @@ export type Database = {
       reviews: {
         Row: {
           brief: string | null
+          canonical_url: string | null
           category_id: number | null
           comments_count: number | null
+          comparison_table: Json | null
           cons: Json | null
           content: string
           created_at: string | null
           id: string
           image_url: string | null
           is_featured: boolean | null
+          keywords: string[] | null
           likes_count: number | null
+          meta_description: string | null
+          meta_title: string | null
+          og_image: string | null
+          product: Json | null
           pros: Json | null
+          published_at: string | null
+          purchase_links: Json | null
           rating: number
+          read_time: number | null
           slug: string
           specs: Json | null
+          status: string | null
+          structured_data: Json | null
           tags: string[] | null
           title: string
+          type: string | null
           updated_at: string | null
+          view_count: number | null
         }
         Insert: {
           brief?: string | null
+          canonical_url?: string | null
           category_id?: number | null
           comments_count?: number | null
+          comparison_table?: Json | null
           cons?: Json | null
           content: string
           created_at?: string | null
           id?: string
           image_url?: string | null
           is_featured?: boolean | null
+          keywords?: string[] | null
           likes_count?: number | null
+          meta_description?: string | null
+          meta_title?: string | null
+          og_image?: string | null
+          product?: Json | null
           pros?: Json | null
+          published_at?: string | null
+          purchase_links?: Json | null
           rating: number
+          read_time?: number | null
           slug: string
           specs?: Json | null
+          status?: string | null
+          structured_data?: Json | null
           tags?: string[] | null
           title: string
+          type?: string | null
           updated_at?: string | null
+          view_count?: number | null
         }
         Update: {
           brief?: string | null
+          canonical_url?: string | null
           category_id?: number | null
           comments_count?: number | null
+          comparison_table?: Json | null
           cons?: Json | null
           content?: string
           created_at?: string | null
           id?: string
           image_url?: string | null
           is_featured?: boolean | null
+          keywords?: string[] | null
           likes_count?: number | null
+          meta_description?: string | null
+          meta_title?: string | null
+          og_image?: string | null
+          product?: Json | null
           pros?: Json | null
+          published_at?: string | null
+          purchase_links?: Json | null
           rating?: number
+          read_time?: number | null
           slug?: string
           specs?: Json | null
+          status?: string | null
+          structured_data?: Json | null
           tags?: string[] | null
           title?: string
+          type?: string | null
           updated_at?: string | null
+          view_count?: number | null
         }
         Relationships: [
           {
