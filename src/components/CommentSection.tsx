@@ -1,108 +1,164 @@
 import React, { useState } from 'react';
-import { useComments } from '@/hooks/useComments';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { MessageSquare } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { supabase } from '@/lib/supabase';
+import { format } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
+
+interface Comment {
+  id: string;
+  review_id: string;
+  user_id?: string;
+  content: string;
+  parent_id?: string;
+  likes_count: number;
+  created_at: string;
+  updated_at: string;
+  name?: string;
+}
 
 interface CommentSectionProps {
   reviewId: string;
-  commentsCount: number;
 }
 
-const CommentSection = ({ reviewId, commentsCount }: CommentSectionProps) => {
-  const [newComment, setNewComment] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const { comments, isLoading, addComment, isAddingComment } = useComments(reviewId);
+const CommentSection = ({ reviewId }: CommentSectionProps) => {
+  const [comment, setComment] = useState('');
+  const [name, setName] = useState('');
+  const queryClient = useQueryClient();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
+  const { data: comments = [], isLoading } = useQuery({
+    queryKey: ['comments', reviewId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('review_id', reviewId)
+        .is('parent_id', null) // Only get top-level comments for now
+        .order('created_at', { ascending: false });
 
-    try {
-      await addComment({
-        content: newComment.trim(),
-        display_name: displayName.trim() || undefined
-      });
-      setNewComment('');
-      setDisplayName('');
-    } catch (error) {
-      console.error('Error submitting comment:', error);
+      if (error) throw error;
+      return data as Comment[];
     }
+  });
+
+  const addCommentMutation = useMutation({
+    mutationFn: async ({ content, name }: { content: string; name: string }) => {
+      const commentId = uuidv4();
+      const now = new Date().toISOString();
+
+      // Store the name in localStorage for this comment ID
+      if (name) {
+        localStorage.setItem(`comment_name_${commentId}`, name);
+      }
+
+      const { data, error } = await supabase
+        .from('comments')
+        .insert([{
+          id: commentId,
+          review_id: reviewId,
+          user_id: null,
+          content: content,
+          parent_id: null,
+          likes_count: 0,
+          created_at: now,
+          updated_at: now
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding comment:', error);
+        throw error;
+      }
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', reviewId] });
+      setComment('');
+      setName('');
+    }
+  });
+
+  // Get stored names for comments
+  const getCommentName = (commentId: string) => {
+    return localStorage.getItem(`comment_name_${commentId}`) || 'Anonymous';
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!comment.trim()) return;
+    addCommentMutation.mutate({ content: comment, name });
   };
 
   if (isLoading) {
     return (
-      <div className="mt-8 text-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p className="mt-2 text-muted-foreground">Loading comments...</p>
+      <div className="animate-pulse">
+        <div className="h-32 bg-muted rounded-xl mb-4"></div>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-24 bg-muted rounded-xl"></div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
-        <MessageSquare className="h-6 w-6" />
-        Comments ({commentsCount})
-      </h2>
+    <div>
+      <h2 className="text-2xl font-bold mb-6">Comments ({comments.length})</h2>
+      
+      <form onSubmit={handleSubmit} className="mb-8 space-y-4">
+        <Input
+          type="text"
+          placeholder="Your name (optional)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="max-w-md"
+        />
+        <Textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Write a comment..."
+          className="min-h-[100px]"
+          required
+        />
+        <Button 
+          type="submit" 
+          disabled={!comment.trim() || addCommentMutation.isPending}
+        >
+          {addCommentMutation.isPending ? 'Posting...' : 'Post Comment'}
+        </Button>
+        {addCommentMutation.isError && (
+          <p className="text-red-500 mt-2">
+            Failed to add comment: {addCommentMutation.error?.message || 'Please try again.'}
+          </p>
+        )}
+      </form>
 
-      {/* Comment Form */}
-      <Card className="p-4 mb-8">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Input
-              type="text"
-              placeholder="Your name (optional)"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              maxLength={50}
-            />
-          </div>
-          <div>
-            <Textarea
-              placeholder="Write a comment..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              rows={3}
-              required
-            />
-          </div>
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isAddingComment}>
-              {isAddingComment ? 'Posting...' : 'Post Comment'}
-            </Button>
-          </div>
-        </form>
-      </Card>
-
-      {/* Comments List */}
-      {comments.length > 0 ? (
-        <div className="space-y-4">
-          {comments.map((comment) => (
-            <Card key={comment.id} className="p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="font-medium">
-                    {comment.display_name || 'Anonymous'}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                  </p>
-                </div>
+      <div className="space-y-6">
+        {comments.map((comment) => (
+          <div 
+            key={comment.id} 
+            className="glass p-6 rounded-xl bg-background/50 backdrop-blur-sm border border-border/50"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="font-medium">{getCommentName(comment.id)}</div>
+              <div className="text-sm text-muted-foreground">
+                {format(new Date(comment.created_at), 'MMM d, yyyy')}
               </div>
-              <p className="mt-2 whitespace-pre-wrap">{comment.content}</p>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-8 text-muted-foreground">
-          <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
-          <p>No comments yet. Be the first to share your thoughts!</p>
-        </div>
-      )}
+            </div>
+            <p className="text-foreground/90 whitespace-pre-wrap">{comment.content}</p>
+          </div>
+        ))}
+
+        {comments.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No comments yet. Be the first to comment!</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

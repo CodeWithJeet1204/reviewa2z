@@ -12,17 +12,28 @@ interface Review {
   id: string;
   title: string;
   slug: string;
-  category_id: string;
-  image_url?: string;
+  description: string;
+  category: string;
+  type: string;
+  status: string;
   rating: number;
-  brief: string;
-  comments_count: number;
-  tags?: string[];
-  category?: {
-    name: string;
-    slug: string;
+  overallRating: {
+    design: number;
+    performance: number;
+    features: number;
+    value: number;
   };
-  is_featured: boolean;
+  product: {
+    name: string;
+    brand: string;
+    price?: string;
+    image?: string;
+  };
+  tags?: string[];
+  viewCount: number;
+  featured: boolean;
+  publishedAt: string;
+  updatedAt: string;
 }
 
 const FeaturedReviewsSection = () => {
@@ -45,11 +56,10 @@ const FeaturedReviewsSection = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('reviews')
-        .select(`
-          *,
-          category:categories(name, slug)
-        `)
-        .eq('is_featured', true)
+        .select('*')
+        .eq('featured', true)
+        .eq('status', 'published')
+        .order('publishedAt', { ascending: false })
         .limit(6);
         
       if (error) {
@@ -58,12 +68,24 @@ const FeaturedReviewsSection = () => {
       }
       
       if (!data) return [];
+
+      console.log(data);
       
       return data.map(review => ({
         ...review,
-        tags: review.tags || [],
-        comments_count: review.comments_count || 0,
-        rating: review.rating || 0
+        tags: [],
+        overallRating: review.overallRating || {
+          design: review.rating,
+          performance: review.rating,
+          features: review.rating,
+          value: review.rating
+        },
+        product: review.product || {
+          name: review.title,
+          brand: review.specs?.brand,
+          price: review.specs?.price,
+          image: '/placeholder-image.jpg'
+        }
       }));
     },
     staleTime: 60000, // Cache for 1 minute
@@ -84,59 +106,55 @@ const FeaturedReviewsSection = () => {
   }
 
   return (
-    <div className="bg-background py-16">
+    <section className="bg-background py-16">
       <div className="container px-4 md:px-6 mx-auto">
-        <div className="mb-8">
+        <div className="flex items-center justify-between mb-8">
           <h2 className="text-3xl font-bold tracking-tight">Featured Reviews</h2>
-          <p className="text-muted-foreground mt-2">Discover our expert takes on the latest products</p>
-        </div>
-        
-        <div className="relative">
-          {/* Left scroll button */}
-          <Button
-            variant={theme === 'system' ? 'secondary' : 'default'}
-            size="icon"
-            className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 rounded-full shadow-lg hidden md:flex hover:scale-110 transition-transform"
-            onClick={() => scroll('left')}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-
-          {/* Reviews container */}
-          <div 
-            ref={scrollContainerRef}
-            className="flex gap-6 overflow-x-auto scrollbar-hide snap-x px-1"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {isLoading ? (
-              [...Array(6)].map((_, i) => (
-                <div key={i} className="min-w-[300px] w-[300px] rounded-lg bg-muted animate-pulse h-[350px] snap-center flex-shrink-0"></div>
-              ))
-            ) : featuredReviews && featuredReviews.length > 0 ? (
-              featuredReviews.map((review) => (
-                <div key={review.id} className="min-w-[300px] w-[300px] snap-center flex-shrink-0">
-                  <ReviewCard review={review} />
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-10 w-full">
-                <p className="text-muted-foreground">No featured reviews found</p>
-              </div>
-            )}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => scroll('left')}
+              className="rounded-full"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => scroll('right')}
+              className="rounded-full"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
+        </div>
 
-          {/* Right scroll button */}
-          <Button
-            variant={theme === 'system' ? 'secondary' : 'default'}
-            size="icon"
-            className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 rounded-full shadow-lg hidden md:flex hover:scale-110 transition-transform"
-            onClick={() => scroll('right')}
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
+        <div
+          ref={scrollContainerRef}
+          className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
+        >
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="min-w-[300px] h-[400px] rounded-xl bg-muted animate-pulse"
+              />
+            ))
+          ) : featuredReviews?.length === 0 ? (
+            <div className="text-center py-10 w-full">
+              <p className="text-muted-foreground">No featured reviews available.</p>
+            </div>
+          ) : (
+            featuredReviews?.map((review) => (
+              <div key={review.id} className="min-w-[300px]">
+                <ReviewCard review={review} />
+              </div>
+            ))
+          )}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

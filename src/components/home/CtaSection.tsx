@@ -9,41 +9,31 @@ const CtaSection = () => {
   return (
     <section className="relative min-h-[60vh] w-full overflow-hidden bg-gradient-to-b from-background via-background/95 to-background">
       {/* Falling Reviews Background */}
-      <FallingReviews />
+      <div className="hidden md:block">
+        <FallingReviews />
+      </div>
 
       {/* Gradient Overlays for better text visibility */}
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent hidden md:block" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background hidden md:block" />
 
       {/* Content */}
       <div className="relative z-10 container px-4 md:px-6 mx-auto flex items-center min-h-[60vh]">
         <div className="text-center max-w-2xl mx-auto">
-          <motion.h2 
+          <h2 
             className="text-4xl md:text-5xl font-bold tracking-tighter mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
           >
             Ready to Experience Unbiased, 
             <span className="text-primary block mt-2">AI-Powered Reviews?</span>
-          </motion.h2>
+          </h2>
           
-          <motion.p 
+          <p 
             className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
           >
             Join thousands of smart shoppers who trust our AI-driven analysis for their purchasing decisions.
-          </motion.p>
+          </p>
           
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+          <div
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
             <Button 
@@ -66,7 +56,7 @@ const CtaSection = () => {
                 Learn More
               </Link>
             </Button>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

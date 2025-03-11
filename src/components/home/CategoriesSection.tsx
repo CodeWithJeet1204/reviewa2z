@@ -8,8 +8,8 @@ interface CategoryWithCount {
   id: number;
   name: string;
   slug: string;
-  icon: string;
-  description: string;
+  icon: string | null;
+  description: string | null;
   count: number;
 }
 
@@ -17,6 +17,7 @@ const CategoriesSection = () => {
   const { data: categories, isLoading, error } = useQuery({
     queryKey: ['homeCategories'],
     queryFn: async () => {
+      // First get all categories
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
         .select('*')
@@ -27,18 +28,19 @@ const CategoriesSection = () => {
         throw categoriesError;
       }
       
-      // Then get counts using a simpler approach
-      const counts: Record<number, number> = {};
+      // Then get review counts for each category
+      const counts: Record<string, number> = {};
       
       try {
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
-          .select('category_id');
+          .select('category')
+          .eq('status', 'published');
         
         if (!reviewsError && reviewsData) {
           reviewsData.forEach((review: any) => {
-            if (review.category_id) {
-              counts[review.category_id] = (counts[review.category_id] || 0) + 1;
+            if (review.category) {
+              counts[review.category] = (counts[review.category] || 0) + 1;
             }
           });
         }
@@ -49,7 +51,7 @@ const CategoriesSection = () => {
       // Combine the data
       const categoriesWithCounts = categoriesData.map((category: any) => ({
         ...category,
-        count: counts[category.id] || 0
+        count: counts[category.name] || 0
       }));
       
       return categoriesWithCounts as CategoryWithCount[];

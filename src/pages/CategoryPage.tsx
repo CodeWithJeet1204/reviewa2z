@@ -26,6 +26,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Check } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Helmet } from 'react-helmet-async';
 
 // Categories that have filterable attributes
 const FILTERABLE_CATEGORIES = {
@@ -528,8 +529,6 @@ const CategoryPage = () => {
   const { data: category, isLoading: categoryLoading, error: categoryError } = useQuery({
     queryKey: ['category', slug],
     queryFn: async () => {
-      if (!slug) throw new Error('Category slug is required');
-
       const { data, error } = await supabase
         .from('categories')
         .select('*')
@@ -547,16 +546,20 @@ const CategoryPage = () => {
   const { data: reviews = [], isLoading: reviewsLoading } = useQuery({
     queryKey: ['categoryReviews', slug, sortBy, searchTerm, selectedTags, selectedFilters],
     queryFn: async () => {
-      if (!category?.id) return [];
+      if (!category?.name) return [];
 
       let query = supabase
         .from('reviews')
-        .select('*')
-        .eq('category_id', category.id);
+        .select(`
+          *,
+          category
+        `)
+        .eq('category', category.name)
+        .eq('status', 'published');
       
       // Apply search filter if provided
       if (searchTerm) {
-        query = query.ilike('title', `%${searchTerm}%`);
+        query = query.or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
       }
       
       // Apply tag filters if any are selected
@@ -565,7 +568,7 @@ const CategoryPage = () => {
       }
 
       // Apply category-specific filters if any are selected
-      if (hasFilters && Object.keys(selectedFilters).length > 0) {
+      if (Object.keys(selectedFilters).length > 0) {
         Object.entries(selectedFilters).forEach(([filter, value]) => {
           if (value) {
             // Add the filter to the specs JSON field
@@ -579,36 +582,36 @@ const CategoryPage = () => {
         case 'highest_rated':
           query = query.order('rating', { ascending: false });
           break;
-        case 'most_commented':
-          query = query.order('comments_count', { ascending: false });
-          break;
-        case 'most_liked':
-          query = query.order('likes_count', { ascending: false });
+        case 'most_viewed':
+          query = query.order('viewCount', { ascending: false });
           break;
         case 'latest':
         default:
-          query = query.order('created_at', { ascending: false });
+          query = query.order('publishedAt', { ascending: false });
           break;
       }
       
       const { data, error } = await query;
       
       if (error) throw error;
-      return data || [];
+      return data?.map(review => ({
+        ...review,
+        category: review.category || category.name // Ensure category is always set
+      })) || [];
     },
-    enabled: !!category?.id
+    enabled: !!category?.name
   });
 
   // Fetch all tags used in this category
   const { data: allTags = [] } = useQuery({
     queryKey: ['categoryTags', slug],
     queryFn: async () => {
-      if (!category?.id) return [];
+      if (!category?.name) return [];
 
       const { data, error } = await supabase
         .from('reviews')
         .select('tags')
-        .eq('category_id', category.id);
+        .eq('category', category.name);
       
       if (error) throw error;
       if (!data) return [];
@@ -623,7 +626,7 @@ const CategoryPage = () => {
       
       return Array.from(tagSet);
     },
-    enabled: !!category?.id
+    enabled: !!category?.name
   });
 
   const toggleTag = (tag: string) => {
@@ -644,6 +647,14 @@ const CategoryPage = () => {
   if (categoryLoading) {
     return (
       <div className="min-h-screen">
+        <Helmet>
+          <title>Loading... | ReviewA2Z</title>
+          <meta 
+            name="description" 
+            content="Loading category page" 
+          />
+        </Helmet>
+
         <Navbar />
         <div className="container px-4 md:px-6 mx-auto py-16 flex items-center justify-center">
           <div className="text-center">
@@ -659,6 +670,14 @@ const CategoryPage = () => {
   if (categoryError || !category) {
     return (
       <div className="min-h-screen">
+        <Helmet>
+          <title>Category Not Found | ReviewA2Z</title>
+          <meta 
+            name="description" 
+            content="Category not found" 
+          />
+        </Helmet>
+
         <Navbar />
         <div className="container px-4 md:px-6 mx-auto py-16 flex items-center justify-center">
           <div className="text-center">
@@ -678,8 +697,16 @@ const CategoryPage = () => {
 
   return (
     <div className="min-h-screen">
+      <Helmet>
+        <title>{category ? `${category.name} Reviews & Ratings | ReviewA2Z` : 'Loading...'}</title>
+        <meta 
+          name="description" 
+          content={category?.description || `Find detailed reviews and ratings for ${category?.name || 'products'}`} 
+        />
+      </Helmet>
+
       <Navbar />
-      <main className="container px-4 md:px-6 mx-auto py-8 mt-24">
+      <main className="container px-4 md:px-6 mx-auto py-12 mt-24">
         {/* Breadcrumbs */}
         <div className="flex items-center text-sm mb-4 text-muted-foreground">
           <Link to="/" className="hover:text-primary">Home</Link>
@@ -719,24 +746,23 @@ const CategoryPage = () => {
                 <SelectContent>
                   <SelectItem value="latest">Latest</SelectItem>
                   <SelectItem value="highest_rated">Highest Rated</SelectItem>
-                  <SelectItem value="most_commented">Most Commented</SelectItem>
-                  <SelectItem value="most_liked">Most Liked</SelectItem>
+                  <SelectItem value="most_viewed">Most Viewed</SelectItem>
                 </SelectContent>
               </Select>
               {hasFilters && (
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2" 
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  <Filter className="h-4 w-4" />
-                  Filters
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2" 
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-4 w-4" />
+                Filters
                   {(selectedTags.length > 0 || Object.keys(selectedFilters).length > 0) && (
-                    <Badge variant="secondary" className="ml-1">
+                  <Badge variant="secondary" className="ml-1">
                       {selectedTags.length + Object.keys(selectedFilters).length}
-                    </Badge>
-                  )}
-                </Button>
+                  </Badge>
+                )}
+              </Button>
               )}
               {(searchTerm || sortBy !== 'latest' || selectedTags.length > 0 || Object.keys(selectedFilters).length > 0) && (
                 <Button variant="ghost" size="icon" onClick={clearFilters} title="Clear filters">
@@ -921,24 +947,24 @@ const CategoryPage = () => {
                     </Button>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2">
                   {allTags.length > 0 ? (
-                    allTags.map((tag) => (
-                      <Badge 
-                        key={tag} 
-                        variant={selectedTags.includes(tag) ? "default" : "outline"}
+                  allTags.map((tag) => (
+                    <Badge 
+                      key={tag} 
+                      variant={selectedTags.includes(tag) ? "default" : "outline"}
                         className="cursor-pointer hover:bg-primary/10"
-                        onClick={() => toggleTag(tag)}
-                      >
-                        {tag}
+                      onClick={() => toggleTag(tag)}
+                    >
+                      {tag}
                         {selectedTags.includes(tag) && (
                           <X className="ml-1 h-3 w-3" />
                         )}
-                      </Badge>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No tags available for this category</p>
-                  )}
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No tags available for this category</p>
+                )}
                 </div>
               </div>
             </div>

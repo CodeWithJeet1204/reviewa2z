@@ -57,6 +57,7 @@ const FallingReviews = () => {
   const requestRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
   const cardCountRef = useRef<number>(0);
+  const isDesktop = typeof window !== 'undefined' ? window.innerWidth >= 768 : false;
 
   const createCard = () => {
     if (!containerRef.current) return null;
@@ -65,10 +66,10 @@ const FallingReviews = () => {
     
     return {
       id: cardCountRef.current++,
-      x: isLeftSide ? -300 : width + 300, // Start from outside the viewport
-      y: Math.random() * (containerRef.current.clientHeight - 100), // Random vertical position
-      speed: 1 + Math.random() * 2, // Horizontal speed
-      scale: 0.6 + Math.random() * 0.3,
+      x: isLeftSide ? -300 : width + 300,
+      y: Math.random() * (containerRef.current.clientHeight - 100),
+      speed: 0.8 + Math.random() * 1.2, // Reduced speed range
+      scale: 0.7 + Math.random() * 0.2, // More consistent scale
       rotation: 0,
       isLeftSide,
       review: sampleReviews[Math.floor(Math.random() * sampleReviews.length)]
@@ -77,7 +78,7 @@ const FallingReviews = () => {
 
   const animate = (time: number) => {
     if (!lastTimeRef.current) lastTimeRef.current = time;
-    const deltaTime = time - lastTimeRef.current;
+    const deltaTime = Math.min(time - lastTimeRef.current, 32); // Cap at ~30fps
     lastTimeRef.current = time;
 
     setCards(prevCards => {
@@ -88,10 +89,9 @@ const FallingReviews = () => {
       const updatedCards = prevCards
         .map(card => ({
           ...card,
-          x: card.x + (card.speed * deltaTime * 0.1 * (card.isLeftSide ? 1 : -1)), // Move horizontally
+          x: card.x + (card.speed * deltaTime * 0.08 * (card.isLeftSide ? 1 : -1)),
         }))
         .filter(card => {
-          // Remove cards that have moved too far
           if (card.isLeftSide) {
             return card.x < width + 300;
           } else {
@@ -99,8 +99,9 @@ const FallingReviews = () => {
           }
         });
 
-      // Add new cards if needed
-      if (updatedCards.length < 10) {
+      // Add new cards if needed, but limit total number based on screen size
+      const maxCards = Math.min(8, Math.floor(width / 300));
+      if (updatedCards.length < maxCards) {
         const newCard = createCard();
         if (newCard) updatedCards.push(newCard);
       }
@@ -112,18 +113,23 @@ const FallingReviews = () => {
   };
 
   useEffect(() => {
-    // Initial cards
-    const initialCards = Array.from({ length: 8 }, createCard).filter((card): card is FallingCard => card !== null);
+    if (!isDesktop) return;
+
+    // Initial cards - reduced number for better performance
+    const initialCards = Array.from({ length: 4 }, createCard).filter((card): card is FallingCard => card !== null);
     setCards(initialCards);
 
     // Start animation
     requestRef.current = requestAnimationFrame(animate);
+    
     return () => {
       if (requestRef.current) {
         cancelAnimationFrame(requestRef.current);
       }
     };
   }, []);
+
+  if (!isDesktop) return null;
 
   return (
     <div 
@@ -136,14 +142,13 @@ const FallingReviews = () => {
           key={card.id}
           className="absolute w-[250px]"
           style={{
-            transform: `translate3d(${card.x}px, ${card.y}px, 0) 
-                       scale(${card.scale})`,
+            transform: `translate3d(${card.x}px, ${card.y}px, 0) scale(${card.scale})`,
             transition: 'transform 0.1s linear',
-            opacity: 0.9,
+            opacity: 0.8,
             willChange: 'transform'
           }}
         >
-          <Card className="bg-background/80 backdrop-blur-sm border-background/50">
+          <Card className="bg-background/70 backdrop-blur-sm border-background/50">
             <CardContent className="p-3">
               <div className="flex items-start gap-2">
                 <div className="rounded-full bg-primary/10 p-1.5 mt-1">

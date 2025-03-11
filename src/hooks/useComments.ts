@@ -48,7 +48,7 @@ export function useComments(reviewId: string) {
     },
     onError: (error) => {
       console.error('Error adding comment:', error);
-      toast.error('Failed to add comment');
+      toast.error('Failed to add comment', { description: error.message });
     }
   });
 

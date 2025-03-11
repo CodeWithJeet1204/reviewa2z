@@ -56,22 +56,23 @@ const SearchPage = () => {
         .from('reviews')
         .select(`
           *,
-          category:categories(name, slug)
-        `);
+          category
+        `)
+        .eq('status', 'published');
       
       if (searchTerm) {
-        query = query.or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%,brief.ilike.%${searchTerm}%`);
+        query = query.or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
       }
       
       if (selectedCategory) {
         const { data: categoryData } = await supabase
           .from('categories')
-          .select('id')
+          .select('name')
           .eq('slug', selectedCategory)
           .single();
           
         if (categoryData) {
-          query = query.eq('category_id', categoryData.id);
+          query = query.eq('category', categoryData.name);
         }
       }
       
@@ -81,23 +82,24 @@ const SearchPage = () => {
       
       switch (sortBy) {
         case 'latest':
-          query = query.order('created_at', { ascending: false });
+          query = query.order('publishedAt', { ascending: false });
           break;
         case 'highest_rated':
-          query = query.order('rating', { ascending: false });
+          query = query.not('overallRating', 'is', null)
+            .order('overallRating->design', { ascending: false })
+            .order('overallRating->performance', { ascending: false })
+            .order('overallRating->features', { ascending: false })
+            .order('overallRating->value', { ascending: false });
           break;
-        case 'most_commented':
-          query = query.order('comments_count', { ascending: false });
-          break;
-        case 'most_liked':
-          query = query.order('likes_count', { ascending: false });
+        case 'most_viewed':
+          query = query.order('viewCount', { ascending: false });
           break;
         case 'relevance':
         default:
           if (searchTerm) {
             query = query.order('title', { ascending: true });
           } else {
-            query = query.order('created_at', { ascending: false });
+            query = query.order('publishedAt', { ascending: false });
           }
           break;
       }
@@ -105,7 +107,16 @@ const SearchPage = () => {
       const { data, error } = await query;
       
       if (error) throw error;
-      return data;
+      return data?.map(review => ({
+        ...review,
+        category: review.category || 'Uncategorized',
+        overallRating: review.overallRating || {
+          design: review.rating || 0,
+          performance: review.rating || 0,
+          features: review.rating || 0,
+          value: review.rating || 0
+        }
+      })) || [];
     }
   });
 
@@ -114,13 +125,14 @@ const SearchPage = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('reviews')
-        .select('tags');
+        .select('tags')
+        .eq('status', 'published');
       
       if (error) throw error;
       
       const tagSet = new Set<string>();
-      data.forEach(review => {
-        if (review.tags) {
+      data?.forEach(review => {
+        if (Array.isArray(review.tags)) {
           review.tags.forEach((tag: string) => tagSet.add(tag));
         }
       });
@@ -166,7 +178,7 @@ const SearchPage = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Search for products, brands, or keywords..."
+                placeholder="Search for reviews..."
                 className="pl-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -181,8 +193,7 @@ const SearchPage = () => {
                   <SelectItem value="relevance">Relevance</SelectItem>
                   <SelectItem value="latest">Latest</SelectItem>
                   <SelectItem value="highest_rated">Highest Rated</SelectItem>
-                  <SelectItem value="most_commented">Most Commented</SelectItem>
-                  <SelectItem value="most_liked">Most Liked</SelectItem>
+                  <SelectItem value="most_viewed">Most Viewed</SelectItem>
                 </SelectContent>
               </Select>
               <Button 

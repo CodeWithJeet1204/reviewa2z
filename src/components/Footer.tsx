@@ -46,55 +46,7 @@ const Footer = () => {
                   How It Works
                 </Link>
               </li>
-              <li>
-                <Link to="/faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Blog
-                </Link>
-              </li>
             </ul>
-          </div>
-          
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium">Legal</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/cookies" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Cookie Policy
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-        
-        <div className="mt-12 pt-6 border-t flex flex-col md:flex-row justify-between items-center">
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} ReviewsA2Z. All rights reserved.
-          </p>
-          <div className="mt-4 md:mt-0 flex items-center space-x-4">
-            <Link to="#" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Facebook
-            </Link>
-            <Link to="#" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Twitter
-            </Link>
-            <Link to="#" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Instagram
-            </Link>
           </div>
         </div>
       </div>

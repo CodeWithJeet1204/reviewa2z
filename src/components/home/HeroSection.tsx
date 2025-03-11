@@ -207,7 +207,7 @@ const ParticlesBackground = ({ mouseX, mouseY }: ParticlesBackgroundProps) => {
   }));
 
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div className="absolute inset-0 overflow-hidden hidden md:block">
       {particles.map((particle, index) => (
         <Particle
           key={index}
@@ -229,7 +229,7 @@ const FloatingReview = ({ delay = 0, mouseX, mouseY, position, index }: Floating
   return (
     <motion.div
       ref={ref}
-      className="absolute w-72"
+      className="absolute w-72 hidden md:block"
       style={{
         ...position,
       }}
@@ -248,15 +248,10 @@ const FloatingReview = ({ delay = 0, mouseX, mouseY, position, index }: Floating
         transition: { duration: 0.2 }
       }}
       transition={{
-        opacity: { duration: 0.3, delay: index * 0.05 },
-        scale: { duration: 0.3, delay: index * 0.05 },
-        default: {
-          duration: 4,
-          repeat: Infinity,
-          repeatType: "reverse",
-          ease: "easeInOut",
-          delay: index * 0.1,
-        }
+        duration: 3,
+        repeat: Infinity,
+        delay,
+        ease: "easeInOut"
       }}
     >
       <Card className="bg-background/60 backdrop-blur-sm border-background/50 hover:bg-background/70 transition-all duration-300">
@@ -292,21 +287,32 @@ const HeroSection = () => {
   const navigate = useNavigate();
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const controls = useAnimation();
+  const isDesktop = typeof window !== 'undefined' ? window.innerWidth >= 768 : false;
+  const [isDesktopView, setIsDesktopView] = useState(isDesktop);
 
   useEffect(() => {
     setMounted(true);
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX);
-      mouseY.set(e.clientY);
+    const handleResize = () => {
+      setIsDesktopView(window.innerWidth >= 768);
     };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+    
+    if (isDesktopView) {
+      const handleMouseMove = (e: MouseEvent) => {
+        mouseX.set(e.clientX);
+        mouseY.set(e.clientY);
+      };
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('resize', handleResize);
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, [isDesktopView]);
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) {
-    e.preventDefault();
+      e.preventDefault();
     }
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
@@ -337,47 +343,45 @@ const HeroSection = () => {
 
   return (
     <div className="relative bg-gradient-to-b from-blue-50 via-background to-transparent dark:from-gray-900 min-h-[90vh] flex items-center justify-center overflow-hidden">
-      {/* Animated Background with Particles */}
-      <ParticlesBackground mouseX={mouseX} mouseY={mouseY} />
+      {/* Animated Background with Particles - Desktop Only */}
+      {isDesktopView && <ParticlesBackground mouseX={mouseX} mouseY={mouseY} />}
       
-      {/* Floating Review Cards */}
-      <div className="absolute inset-0 overflow-visible px-12">
-        {reviewPositions.map((position, index) => (
-          <FloatingReview
-            key={index}
-            index={index}
-            delay={index * 0.1}
-            mouseX={mouseX}
-            mouseY={mouseY}
-            position={position}
-          />
-        ))}
-            </div>
+      {/* Floating Review Cards - Desktop Only */}
+      {isDesktopView && (
+        <div className="absolute inset-0 overflow-visible px-12">
+          {reviewPositions.slice(0, isDesktopView ? 10 : 0).map((position, index) => (
+            <FloatingReview
+              key={index}
+              index={index}
+              delay={index * 0.1}
+              mouseX={mouseX}
+              mouseY={mouseY}
+              position={position}
+            />
+          ))}
+        </div>
+      )}
             
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-radial from-transparent via-background/30 to-background pointer-events-none" />
+      {/* Gradient Overlay - Desktop Only */}
+      {isDesktopView && (
+        <div className="absolute inset-0 bg-gradient-radial from-transparent via-background/30 to-background pointer-events-none" />
+      )}
 
       {/* Content */}
-      <div className="relative text-center max-w-2xl mx-auto space-y-12 px-4 z-10">
+      <div className="relative text-center max-w-2xl mx-auto space-y-8 md:space-y-12 px-4 z-10">
         {/* Search Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="relative flex gap-2 max-w-xl mx-auto"
-          whileHover={{ scale: 1.02 }}
-        >
+        <div className="relative flex gap-2 max-w-xl mx-auto">
           <div className="relative flex-1 group">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
             <Input
               type="text"
-              placeholder="Search for products, brands, or categories..."
+              placeholder="Search for reviews..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               className="pl-10 pr-4 w-full transition-all border-2 bg-background/90 backdrop-blur-sm hover:bg-background focus:bg-background shadow-lg"
             />
-                </div>
+          </div>
           <Button 
             onClick={() => handleSearch()} 
             size="icon"
@@ -385,85 +389,46 @@ const HeroSection = () => {
           >
             <Search className="h-4 w-4" />
           </Button>
-        </motion.div>
+        </div>
 
         {/* Main Content with Glass Effect */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="relative backdrop-blur-md bg-background/40 rounded-3xl p-8 shadow-lg border border-background/50"
-        >
+        <div className="relative backdrop-blur-md bg-background/40 rounded-3xl p-6 md:p-8 shadow-lg border border-background/50">
           <div className="relative inline-block">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-              className="absolute -top-6 -right-6 text-primary"
-              whileHover={{ scale: 1.2, rotate: 180 }}
-            >
-              <Sparkles className="h-6 w-6" />
-            </motion.div>
-            <motion.h1 
-              className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl text-foreground"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
+            {isDesktopView && (
+              <div className="absolute -top-6 -right-6 text-primary">
+                <Sparkles className="h-6 w-6" />
+              </div>
+            )}
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter text-foreground">
               AI-Powered Reviews <br />
               <span className="relative inline-block mt-2 text-primary">
                 You Can Trust
                 <div className="absolute bottom-0 left-0 h-[3px] w-full bg-gradient-to-r from-primary to-primary/50" />
               </span>
-            </motion.h1>
+            </h1>
           </div>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-            className="text-foreground/90 text-xl mt-4"
-            whileHover={{ scale: 1.02 }}
-          >
+          <p className="text-foreground/90 text-lg md:text-xl mt-4">
             Discover unbiased, data-driven reviews generated by advanced AI. No human bias, just factual analysis.
-          </motion.p>
-        </motion.div>
+          </p>
+        </div>
         
         {/* Trust Indicators */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="space-y-4"
-        >
-          <div className="flex justify-center items-center gap-6">
-            <motion.div
-              whileHover={{ scale: 1.2, rotate: 10 }}
-              className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center backdrop-blur-sm hover:shadow-lg transition-shadow"
-            >
-              <Shield className="h-6 w-6 text-primary" />
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.2, rotate: -10 }}
-              className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center backdrop-blur-sm hover:shadow-lg transition-shadow"
-            >
-              <Bot className="h-6 w-6 text-primary" />
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.2, rotate: 10 }}
-              className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center backdrop-blur-sm hover:shadow-lg transition-shadow"
-            >
-              <Star className="h-6 w-6 text-primary" />
-            </motion.div>
-                      </div>
-          <motion.p 
-            className="text-base text-muted-foreground"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            whileHover={{ scale: 1.05 }}
-          >
+        <div className="space-y-4">
+          <div className="flex justify-center items-center gap-4 md:gap-6">
+            <div className="h-10 md:h-12 w-10 md:w-12 rounded-xl bg-primary/20 flex items-center justify-center backdrop-blur-sm">
+              <Shield className="h-5 md:h-6 w-5 md:w-6 text-primary" />
+            </div>
+            <div className="h-10 md:h-12 w-10 md:w-12 rounded-xl bg-primary/20 flex items-center justify-center backdrop-blur-sm">
+              <Bot className="h-5 md:h-6 w-5 md:w-6 text-primary" />
+            </div>
+            <div className="h-10 md:h-12 w-10 md:w-12 rounded-xl bg-primary/20 flex items-center justify-center backdrop-blur-sm">
+              <Star className="h-5 md:h-6 w-5 md:w-6 text-primary" />
+            </div>
+          </div>
+          <p className="text-sm md:text-base text-muted-foreground">
             Trusted by <span className="font-medium text-foreground">People Across the Globe</span>
-          </motion.p>
-        </motion.div>
+          </p>
+        </div>
       </div>
     </div>
   );
