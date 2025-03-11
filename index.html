@@ -1,76 +1,18 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <!-- Primary Meta Tags -->
-    <title>ReviewA2Z - Expert AI-Powered Product Reviews & Recommendations</title>
-    <meta name="title" content="ReviewA2Z - Expert AI-Powered Product Reviews & Recommendations">
-    <meta name="description" content="Discover unbiased, data-driven product reviews powered by advanced AI. Get expert recommendations, detailed analysis, and trusted insights for informed purchasing decisions.">
-    <meta name="keywords" content="AI product reviews, unbiased reviews, product recommendations, tech reviews, consumer guides, trusted reviews">
-    <meta name="robots" content="index, follow">
-    <meta name="language" content="English">
-    <meta name="author" content="ReviewA2Z">
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://reviewa2z.com/">
-    <meta property="og:title" content="ReviewA2Z - Expert AI-Powered Product Reviews">
-    <meta property="og:description" content="Discover unbiased, data-driven product reviews powered by advanced AI. Get expert recommendations and trusted insights.">
-    <meta property="og:image" content="/og-image.png">
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://reviewa2z.com/">
-    <meta property="twitter:title" content="ReviewA2Z - Expert AI-Powered Product Reviews">
-    <meta property="twitter:description" content="Discover unbiased, data-driven product reviews powered by advanced AI. Get expert recommendations and trusted insights.">
-    <meta property="twitter:image" content="/og-image.png">
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
-    
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://reviewa2z.com/">
-
-    <!-- Preconnect to important third-party domains -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <!-- Flash Prevention -->
-    <script>
-      // Prevent flash of wrong theme
-      let theme = localStorage.getItem('theme') || 'system';
-      if (theme === 'system') {
-        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      }
-      document.documentElement.classList.add(theme);
-    </script>
-
-    <!-- Structured Data -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "ReviewA2Z",
-        "url": "https://reviewa2z.com",
-        "description": "Expert AI-Powered Product Reviews and Recommendations",
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": "https://reviewa2z.com/search?q={search_term_string}",
-          "query-input": "required name=search_term_string"
-        }
-      }
-    </script>
+    <title>ReviewA2Z - AI-Powered Product Reviews and Comparisons</title>
+    <meta name="description" content="Get unbiased, in-depth analysis of products before making your purchase decision with ReviewA2Z's AI-powered reviews and comparisons." />
   </head>
-
   <body>
     <div id="root"></div>
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

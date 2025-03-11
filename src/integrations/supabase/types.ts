@@ -177,69 +177,111 @@ export type Database = {
       }
       reviews: {
         Row: {
-          brief: string | null
-          category_id: number | null
+          canonicalUrl: string | null
+          category: string | null
           comments_count: number | null
+          comparisonTable: Json | null
           cons: Json | null
           content: string
           created_at: string | null
+          description: string | null
+          featured: boolean | null
           id: string
-          image_url: string | null
-          is_featured: boolean | null
+          keywords: string[] | null
           likes_count: number | null
+          metaDescription: string | null
+          metaTitle: string | null
+          ogImage: string | null
+          overallRating: Json | null
+          product: Json | null
           pros: Json | null
+          publishedAt: string | null
+          purchaseLinks: Json | null
           rating: number
+          readTime: number | null
           slug: string
           specs: Json | null
+          status: string | null
+          structuredData: Json | null
           tags: string[] | null
           title: string
-          updated_at: string | null
+          type: string | null
+          updatedAt: string | null
+          viewCount: number | null
         }
         Insert: {
-          brief?: string | null
-          category_id?: number | null
+          canonicalUrl?: string | null
+          category?: string | null
           comments_count?: number | null
+          comparisonTable?: Json | null
           cons?: Json | null
           content: string
           created_at?: string | null
+          description?: string | null
+          featured?: boolean | null
           id?: string
-          image_url?: string | null
-          is_featured?: boolean | null
+          keywords?: string[] | null
           likes_count?: number | null
+          metaDescription?: string | null
+          metaTitle?: string | null
+          ogImage?: string | null
+          overallRating?: Json | null
+          product?: Json | null
           pros?: Json | null
+          publishedAt?: string | null
+          purchaseLinks?: Json | null
           rating: number
+          readTime?: number | null
           slug: string
           specs?: Json | null
+          status?: string | null
+          structuredData?: Json | null
           tags?: string[] | null
           title: string
-          updated_at?: string | null
+          type?: string | null
+          updatedAt?: string | null
+          viewCount?: number | null
         }
         Update: {
-          brief?: string | null
-          category_id?: number | null
+          canonicalUrl?: string | null
+          category?: string | null
           comments_count?: number | null
+          comparisonTable?: Json | null
           cons?: Json | null
           content?: string
           created_at?: string | null
+          description?: string | null
+          featured?: boolean | null
           id?: string
-          image_url?: string | null
-          is_featured?: boolean | null
+          keywords?: string[] | null
           likes_count?: number | null
+          metaDescription?: string | null
+          metaTitle?: string | null
+          ogImage?: string | null
+          overallRating?: Json | null
+          product?: Json | null
           pros?: Json | null
+          publishedAt?: string | null
+          purchaseLinks?: Json | null
           rating?: number
+          readTime?: number | null
           slug?: string
           specs?: Json | null
+          status?: string | null
+          structuredData?: Json | null
           tags?: string[] | null
           title?: string
-          updated_at?: string | null
+          type?: string | null
+          updatedAt?: string | null
+          viewCount?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "reviews_category_id_fkey"
-            columns: ["category_id"]
+            foreignKeyName: "reviews_category_fkey"
+            columns: ["category"]
             isOneToOne: false
             referencedRelation: "categories"
-            referencedColumns: ["id"]
+            referencedColumns: ["name"]
           },
         ]
       }
@@ -253,6 +295,32 @@ export type Database = {
           x: number
         }
         Returns: number
+      }
+      get_comments: {
+        Args: {
+          p_review_id: number
+        }
+        Returns: {
+          id: number
+          content: string
+          name: string
+          review_id: number
+          created_at: string
+        }[]
+      }
+      handle_comment: {
+        Args: {
+          p_content: string
+          p_name: string
+          p_review_id: number
+        }
+        Returns: {
+          id: number
+          content: string
+          name: string
+          review_id: number
+          created_at: string
+        }[]
       }
       increment: {
         Args: {
