@@ -1,9 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star } from 'lucide-react';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface Review {
   id: string;
@@ -14,15 +12,11 @@ interface Review {
   category: string;
   type: string;
   status: string;
-  tags?: string[];
   product: {
     name: string;
     brand: string;
     price?: string;
     image?: string;
-  };
-  overallRating: {
-    [key: string]: number;
   };
   publishedAt: string;
   viewCount: number;
@@ -38,42 +32,39 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
   const {
     title,
     slug,
-    rating = 0,
+    rating,
     description = '',
     category,
-    tags = [],
-    product,
-    overallRating
   } = review;
 
   const handleCategoryClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
 
-  // Calculate average rating from overallRating if available
-  const averageRating = overallRating && typeof overallRating === 'object'
-    ? Object.values(overallRating).filter(val => typeof val === 'number').reduce((a, b) => a + b, 0) / 
-      Object.values(overallRating).filter(val => typeof val === 'number').length
-    : rating || 0;
-
-  // Ensure tags is always an array
-  const displayTags = Array.isArray(tags) ? tags : [];
-
   return (
     <Link to={`/review/${slug}`} className="block h-[320px]">
       <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg h-full">
-        <AspectRatio ratio={16 / 9}>
-          <img
-            src={review.ogImage || product?.image || '/placeholder-image.jpg'}
-            alt={title}
-            className="object-cover w-full h-full"
+        <div className="relative h-48 overflow-hidden rounded-t-xl">
+          {/* Blurred background */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center blur-xl scale-110"
+            style={{ 
+              backgroundImage: `url(${review.ogImage || '/placeholder-image.jpg'})`,
+              opacity: 0.5
+            }}
           />
-        </AspectRatio>
+          {/* Main image */}
+          <img
+            src={review.ogImage || '/placeholder-image.jpg'}
+            alt={review.title}
+            className="relative h-full w-auto mx-auto object-contain z-10"
+          />
+        </div>
 
-        <CardContent className="px-4 pt-4 pb-6 flex flex-col h-[calc(320px-8/16*100%)]">
+        <CardContent className="px-4 pt-4 pb-6 flex flex-col flex-grow">
           <div className="flex items-center justify-between gap-4 mb-2">
             <Link
-              to={`/category/${category?.toLowerCase() || 'uncategorized'}`}
+              to={`/category/${category?.toLowerCase().replace(/\s*&\s*/g, '-').replace(/\s+/g, '-')}`}
               className="text-sm text-muted-foreground hover:text-primary relative z-10"
               onClick={handleCategoryClick}
             >
@@ -81,7 +72,7 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
             </Link>
             <div className="flex items-center gap-1">
               <Star className="h-4 w-4 text-yellow-500" />
-              <span className="text-sm font-medium">{Number.isFinite(averageRating) ? averageRating.toFixed(1) : '0.0'}</span>
+              <span className="text-sm font-medium">{rating.toFixed(1)}</span>
             </div>
           </div>
 
@@ -89,24 +80,9 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
             {title}
           </h3>
 
-          <p className="text-muted-foreground text-sm line-clamp-2 mb-4">
+          <p className="text-muted-foreground text-sm line-clamp-2">
             {description}
           </p>
-
-          {displayTags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-auto">
-              {displayTags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-              {displayTags.length > 2 && (
-                <Badge variant="secondary" className="text-xs">
-                  +{displayTags.length - 2}
-                </Badge>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
     </Link>

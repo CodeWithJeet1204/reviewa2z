@@ -214,7 +214,7 @@ const ReviewPage = () => {
           reviewCount: review.viewCount,
           bestRating: '5'
         },
-        image: review.product.images[0]?.url || review.structuredData.thumbnailUrl || '/placeholder-image.jpg'
+        image: review.ogImage || review.structuredData.thumbnailUrl || '/placeholder-image.jpg'
       };
 
       script.innerHTML = JSON.stringify(structuredData);
@@ -232,16 +232,16 @@ const ReviewPage = () => {
           <title>Loading Review... | ReviewA2Z</title>
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>
-        <div className="min-h-screen">
-          <Navbar />
-          <div className="container px-4 md:px-6 mx-auto py-16 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-xl font-medium">Loading review...</p>
-            </div>
+      <div className="min-h-screen">
+        <Navbar />
+        <div className="container px-4 md:px-6 mx-auto py-16 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-xl font-medium">Loading review...</p>
           </div>
-          <Footer />
         </div>
+        <Footer />
+      </div>
       </>
     );
   }
@@ -253,21 +253,21 @@ const ReviewPage = () => {
           <title>Review Not Found | ReviewA2Z</title>
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>
-        <div className="min-h-screen">
-          <Navbar />
+      <div className="min-h-screen">
+        <Navbar />
           <div className="container px-4 md:px-6 mx-auto py-16">
-            <div className="text-center">
+          <div className="text-center">
               <h1 className="text-2xl font-bold mb-4">Review not found</h1>
               <p className="text-muted-foreground mb-8">
                 The review you're looking for doesn't exist or has been removed.
-              </p>
-              <Button asChild>
+            </p>
+            <Button asChild>
                 <Link to="/">Return Home</Link>
-              </Button>
-            </div>
+            </Button>
           </div>
-          <Footer />
         </div>
+        <Footer />
+      </div>
       </>
     );
   }
@@ -293,12 +293,12 @@ const ReviewPage = () => {
         <meta property="og:title" content={review.metaTitle || `${review.title} Review & Rating | ReviewA2Z`} />
         <meta property="og:description" content={review.metaDescription || review.description} />
         <meta property="og:type" content="article" />
-        <meta property="og:image" content={review.product.images[0]?.url || review.structuredData.thumbnailUrl || '/placeholder-image.jpg'} />
+        <meta property="og:image" content={review.ogImage || review.structuredData.thumbnailUrl || '/placeholder-image.jpg'} />
         
         {/* Twitter */}
         <meta name="twitter:title" content={review.metaTitle || `${review.title} Review & Rating | ReviewA2Z`} />
         <meta name="twitter:description" content={review.metaDescription || review.description} />
-        <meta name="twitter:image" content={review.product.images[0]?.url || review.structuredData.thumbnailUrl || '/placeholder-image.jpg'} />
+        <meta name="twitter:image" content={review.ogImage || review.structuredData.thumbnailUrl || '/placeholder-image.jpg'} />
         <meta name="twitter:card" content="summary_large_image" />
         
         {/* Article specific */}
@@ -314,19 +314,19 @@ const ReviewPage = () => {
         <link rel="canonical" href={review.canonicalUrl || `https://reviewa2z.com/review/${review.slug}`} />
       </Helmet>
 
-      <div className="min-h-screen">
-        <Navbar />
+    <div className="min-h-screen">
+      <Navbar />
         <main className="container px-4 md:px-6 mx-auto py-12 mt-24">
           {/* Breadcrumbs */}
           <div className="flex items-center gap-2 text-sm mb-8 text-muted-foreground">
-            <Link to="/" className="hover:text-primary">Home</Link>
+          <Link to="/" className="hover:text-primary">Home</Link>
             <span>/</span>
             <Link to={`/category/${review.category.toLowerCase().replace(/\s*&\s*/g, '-').replace(/\s+/g, '-')}`} className="hover:text-primary">
               {review.category}
-            </Link>
+          </Link>
             <span>/</span>
-            <span className="text-foreground">{review.title}</span>
-          </div>
+          <span className="text-foreground">{review.title}</span>
+        </div>
 
           {/* Main Content */}
           <div className="flex flex-col lg:flex-row gap-12 mb-12">
@@ -334,15 +334,24 @@ const ReviewPage = () => {
             <div className="lg:w-[40%]">
               <div className="sticky top-32">
                 <div className="rounded-xl overflow-hidden shadow-lg bg-muted">
-                  <div className="aspect-[4/3] relative">
-                    <img 
-                      src={review.product.images[0]?.url || '/placeholder-image.jpg'} 
-                      alt={review.product.images[0]?.alt || review.title}
-                      className="w-full h-full object-cover absolute inset-0"
+                  <div className="relative h-[400px] overflow-hidden">
+                    {/* Blurred background */}
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center blur-xl scale-110"
+                      style={{ 
+                        backgroundImage: `url(${review.ogImage || '/placeholder-image.jpg'})`,
+                        opacity: 0.5
+                      }}
+                    />
+                    {/* Main image */}
+                    <img
+                      src={review.ogImage || '/placeholder-image.jpg'}
+                      alt={review.title}
+                      className="relative h-full w-auto mx-auto object-contain z-10"
                     />
                   </div>
                 </div>
-                
+
                 {/* Quick Stats */}
                 <div className="mt-8">
                   <div className="glass rounded-xl p-6">
@@ -373,6 +382,47 @@ const ReviewPage = () => {
                       <p className="text-sm font-medium text-muted-foreground text-center mt-2">
                         Overall Rating
                       </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pros & Cons */}
+                <div className="mt-8">
+                  <div className="glass rounded-xl p-6">
+                    {/* Pros */}
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-green-500 mb-4 flex items-center gap-2">
+                        <span className="inline-block p-1.5 rounded-lg bg-green-500/10">
+                          <Plus className="h-4 w-4 text-green-500" />
+                        </span>
+                        Pros
+                      </h3>
+                      <ul className="space-y-2">
+                        {Array.isArray(review.pros) && review.pros.map((pro, index) => (
+                          <li key={index} className="flex items-start text-sm group">
+                            <span className="text-green-500 mr-2 font-bold">+</span>
+                            <span>{pro}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Cons */}
+                    <div className="pt-4 border-t">
+                      <h3 className="text-lg font-semibold text-red-500 mb-4 flex items-center gap-2">
+                        <span className="inline-block p-1.5 rounded-lg bg-red-500/10">
+                          <Minus className="h-4 w-4 text-red-500" />
+                        </span>
+                        Cons
+                      </h3>
+                      <ul className="space-y-2">
+                        {Array.isArray(review.cons) && review.cons.map((con, index) => (
+                          <li key={index} className="flex items-start text-sm group">
+                            <span className="text-red-500 mr-2 font-bold">-</span>
+                            <span>{con}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
                 </div>
@@ -528,57 +578,44 @@ const ReviewPage = () => {
                     </TabsTrigger>
                   )}
                 </TabsList>
-
+                
                 <TabsContent value="review" className="mt-8">
                   {/* Main Content */}
                   <div className="prose prose-lg dark:prose-invert max-w-none">
-                    {review.content.split('\n\n').map((paragraph, index) => (
-                      <p key={index} className="text-lg leading-relaxed mb-6">
-                        {paragraph}
-                      </p>
-                    ))}
+                    {review.content.split('\n').map((line, index) => {
+                      // Handle headers
+                      if (line.startsWith('### ')) {
+                        return <h3 key={index} className="text-2xl font-bold mt-8 mb-4">{line.replace('### ', '')}</h3>;
+                      }
+                      if (line.startsWith('#### ')) {
+                        return <h4 key={index} className="text-xl font-bold mt-6 mb-3">{line.replace('#### ', '')}</h4>;
+                      }
+                      // Handle bold text
+                      if (line.includes('**')) {
+                        return (
+                          <p key={index} className="text-lg leading-relaxed mb-6">
+                            {line.split('**').map((part, i) => (
+                              i % 2 === 0 ? part : <strong key={i}>{part}</strong>
+                            ))}
+                          </p>
+                        );
+                      }
+                      // Handle bullet points
+                      if (line.startsWith('- ')) {
+                        return (
+                          <li key={index} className="text-lg leading-relaxed mb-2 ml-4">
+                            {line.replace('- ', '')}
+                          </li>
+                        );
+                      }
+                      // Handle regular paragraphs
+                      return <p key={index} className="text-lg leading-relaxed mb-6">{line}</p>;
+                    })}
                   </div>
 
                   <Separator className="my-12" />
-
-                  {/* Pros & Cons */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="glass rounded-xl p-8 bg-background/50 backdrop-blur-sm border border-border/50 hover:border-primary/20 transition-colors duration-300">
-                      <h3 className="text-2xl font-semibold text-green-500 mb-6 flex items-center gap-2">
-                        <span className="inline-block p-2 rounded-lg bg-green-500/10">
-                          <Plus className="h-5 w-5 text-green-500" />
-                        </span>
-                        Pros
-                      </h3>
-                      <ul className="space-y-4">
-                        {Array.isArray(review.pros) && review.pros.map((pro, index) => (
-                          <li key={index} className="flex items-start text-lg group">
-                            <span className="text-green-500 mr-3 font-bold transition-transform duration-300 group-hover:scale-110">+</span>
-                            <span className="group-hover:text-foreground/90 transition-colors duration-300">{pro}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="glass rounded-xl p-8 bg-background/50 backdrop-blur-sm border border-border/50 hover:border-primary/20 transition-colors duration-300">
-                      <h3 className="text-2xl font-semibold text-red-500 mb-6 flex items-center gap-2">
-                        <span className="inline-block p-2 rounded-lg bg-red-500/10">
-                          <Minus className="h-5 w-5 text-red-500" />
-                        </span>
-                        Cons
-                      </h3>
-                      <ul className="space-y-4">
-                        {Array.isArray(review.cons) && review.cons.map((con, index) => (
-                          <li key={index} className="flex items-start text-lg group">
-                            <span className="text-red-500 mr-3 font-bold transition-transform duration-300 group-hover:scale-110">-</span>
-                            <span className="group-hover:text-foreground/90 transition-colors duration-300">{con}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
                 </TabsContent>
-
+                
                 <TabsContent value="specs" className="mt-8">
                   <div className="glass rounded-xl p-8 bg-background/50 backdrop-blur-sm border border-border/50">
                     <div className="grid gap-6">
