@@ -513,89 +513,264 @@ const ReviewPage = () => {
                 )}
               </div>
 
-              {/* Product Information */}
-              <div className="mb-8 glass rounded-xl p-6 bg-background/50 backdrop-blur-sm border border-border/50">
-                <div className="flex flex-col gap-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h2 className="text-2xl font-bold">{review.product.name}</h2>
-                      {review.product.brand && (
-                        <p className="text-muted-foreground">by {review.product.brand}</p>
-                      )}
-                    </div>
-                    {(review.product.price?.amount > 0 || review.product.availability) && (
-                      <div className="text-right">
-                        {review.product.price?.amount > 0 && (
-                          <div className="text-2xl font-bold text-primary">
-                            ${review.product.price.amount.toFixed(2)} {review.product.price.currency}
-                          </div>
-                        )}
-                        {review.product.availability && (
-                          <div className="text-sm text-muted-foreground">
-                            {review.product.availability === 'InStock' ? 'In Stock' : 'Out of Stock'}
+              {/* Product Information - Only show if there's content */}
+              {((review.product.name && review.product.name !== review.title) || 
+                review.product.brand || 
+                (review.product.price?.amount > 0) || 
+                review.product.availability || 
+                (review.product.features && review.product.features.length > 0)) && (
+                <div className="mb-8 glass rounded-xl p-6 bg-background/50 backdrop-blur-sm border border-border/50">
+                  <div className="flex flex-col gap-4">
+                    {(review.product.name || review.product.brand) && (
+                      <div className="flex justify-between items-center">
+                        <div>
+                          {review.product.name && review.product.name !== review.title && (
+                            <h2 className="text-2xl font-bold">{review.product.name}</h2>
+                          )}
+                          {review.product.brand && (
+                            <p className="text-muted-foreground">by {review.product.brand}</p>
+                          )}
+                        </div>
+                        {(review.product.price?.amount > 0 || review.product.availability) && (
+                          <div className="text-right">
+                            {review.product.price?.amount > 0 && (
+                              <div className="text-2xl font-bold text-primary">
+                                ${review.product.price.amount.toFixed(2)} {review.product.price.currency}
+                              </div>
+                            )}
+                            {review.product.availability && (
+                              <div className="text-sm text-muted-foreground">
+                                {review.product.availability === 'InStock' ? 'In Stock' : 'Out of Stock'}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
                     )}
+                    
+                    {review.product.features && review.product.features.length > 0 && (
+                      <div className="mt-4">
+                        <h3 className="text-lg font-semibold mb-2">Key Features</h3>
+                        <ul className="grid grid-cols-2 gap-2">
+                          {review.product.features.map((feature, index) => (
+                            <li key={index} className="flex items-center gap-2">
+                              <Check className="h-4 w-4 text-green-500" />
+                              <span>{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
-                  
-                  {review.product.features && review.product.features.length > 0 && (
-                    <div className="mt-4">
-                      <h3 className="text-lg font-semibold mb-2">Key Features</h3>
-                      <ul className="grid grid-cols-2 gap-2">
-                        {review.product.features.map((feature, index) => (
-                          <li key={index} className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-green-500" />
-                            <span>{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
                 </div>
-              </div>
+              )}
 
-              <Tabs defaultValue="review" className="w-full">
-                <TabsList className="w-full grid grid-cols-3 gap-4 p-1 h-14 bg-background/95 backdrop-blur-sm rounded-xl sticky top-20 z-10">
-                  <TabsTrigger 
-                    value="review" 
-                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 text-lg font-medium rounded-lg"
-                  >
-                    Review
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="specs" 
-                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 text-lg font-medium rounded-lg"
-                  >
-                    Specifications
-                  </TabsTrigger>
-                  {review.comparisonTable && review.comparisonTable.length > 0 && (
-                    <TabsTrigger 
-                      value="comparison" 
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 text-lg font-medium rounded-lg"
-                    >
-                      Comparison
-                    </TabsTrigger>
+              {/* Tabs Section - Only show if there are specs or comparison data */}
+              {(Object.keys(review.specifications || {}).length > 0 || 
+                (review.comparisonTable && review.comparisonTable.length > 0)) ? (
+                <Tabs defaultValue="review" className="w-full">
+                  <TabsList className="w-full h-auto bg-background/95 backdrop-blur-sm rounded-xl sticky top-20 z-10 p-2">
+                    <div className="grid grid-cols-[1fr,auto,auto] gap-2">
+                      <TabsTrigger 
+                        value="review" 
+                        className="w-full py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 text-base font-medium rounded-lg"
+                      >
+                        Review
+                      </TabsTrigger>
+                      {Object.keys(review.specifications || {}).length > 0 && (
+                        <TabsTrigger 
+                          value="specs" 
+                          className="w-full py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 text-base font-medium rounded-lg"
+                        >
+                          Specifications
+                        </TabsTrigger>
+                      )}
+                      {review.comparisonTable && review.comparisonTable.length > 0 && (
+                        <TabsTrigger 
+                          value="comparison" 
+                          className="w-full py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 text-base font-medium rounded-lg"
+                        >
+                          Comparison
+                        </TabsTrigger>
+                      )}
+                    </div>
+                  </TabsList>
+                  
+                  <TabsContent value="review" className="mt-8">
+                    <div className="prose prose-lg dark:prose-invert max-w-none">
+                      {review.content.split('\n').map((line, index) => {
+                        // Main title (H1)
+                        if (line.startsWith('# ')) {
+                          return (
+                            <h1 key={index} className="text-4xl font-bold mb-8 mt-12">
+                              {line.replace('# ', '')}
+                            </h1>
+                          );
+                        }
+                        // Section titles (H2)
+                        if (line.startsWith('## ')) {
+                          return (
+                            <h2 key={index} className="text-3xl font-bold mb-6 mt-10">
+                              {line.replace('## ', '')}
+                            </h2>
+                          );
+                        }
+                        // Subsection titles (H3)
+                        if (line.startsWith('### ')) {
+                          return (
+                            <h3 key={index} className="text-2xl font-bold mb-4 mt-8">
+                              {line.replace('### ', '')}
+                            </h3>
+                          );
+                        }
+                        // Sub-subsection titles (H4)
+                        if (line.startsWith('#### ')) {
+                          return (
+                            <h4 key={index} className="text-xl font-semibold mb-3 mt-6">
+                              {line.replace('#### ', '')}
+                            </h4>
+                          );
+                        }
+                        // Handle bold text
+                        if (line.includes('**')) {
+                          const parts = line.split('**');
+                          return (
+                            <p key={index} className="text-lg leading-relaxed mb-6">
+                              {parts.map((part, i) => (
+                                i % 2 === 0 ? part : <strong key={i} className="font-semibold">{part}</strong>
+                              ))}
+                            </p>
+                          );
+                        }
+                        // Handle bullet points
+                        if (line.startsWith('- ')) {
+                          return (
+                            <li key={index} className="text-lg leading-relaxed mb-3 ml-6 list-disc">
+                              {line.replace('- ', '')}
+                            </li>
+                          );
+                        }
+                        // Handle numbered lists
+                        if (/^\d+\.\s/.test(line)) {
+                          return (
+                            <li key={index} className="text-lg leading-relaxed mb-3 ml-6 list-decimal">
+                              {line.replace(/^\d+\.\s/, '')}
+                            </li>
+                          );
+                        }
+                        // Handle regular paragraphs with proper spacing
+                        if (line.trim()) {
+                          return (
+                            <p key={index} className="text-lg leading-relaxed mb-6">
+                              {line}
+                            </p>
+                          );
+                        }
+                        // Add spacing for empty lines
+                        return <div key={index} className="h-6" />;
+                      })}
+                    </div>
+                  </TabsContent>
+                  
+                  {Object.keys(review.specifications || {}).length > 0 && (
+                    <TabsContent value="specs" className="mt-8">
+                      <div className="glass rounded-xl p-8 bg-background/50 backdrop-blur-sm border border-border/50">
+                        <div className="grid gap-6">
+                          {Object.keys(review.specifications || {}).map((key) => (
+                            <div 
+                              key={key} 
+                              className="grid grid-cols-2 gap-6 py-4 border-b last:border-0 hover:bg-primary/5 transition-colors duration-300 rounded-lg px-4"
+                            >
+                              <div className="font-medium text-lg text-foreground/80">{key}</div>
+                              <div className="text-foreground text-lg">{review.specifications[key]}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </TabsContent>
                   )}
-                </TabsList>
-                
-                <TabsContent value="review" className="mt-8">
-                  {/* Main Content */}
+
+                  {review.comparisonTable && review.comparisonTable.length > 0 && (
+                    <TabsContent value="comparison" className="mt-8">
+                      <div className="glass rounded-xl p-8 bg-background/50 backdrop-blur-sm border border-border/50">
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead>
+                              <tr>
+                                <th className="text-left p-4 border-b font-medium">Feature</th>
+                                {review.comparisonTable[0].products.map((product, index) => (
+                                  <th key={index} className="text-left p-4 border-b font-medium">
+                                    {product.productName}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {review.comparisonTable.map((row, index) => (
+                                <tr key={index}>
+                                  <td className="p-4 border-b font-medium">{row.feature}</td>
+                                  {row.products.map((product, productIndex) => (
+                                    <td 
+                                      key={productIndex} 
+                                      className={`p-4 border-b ${product.winner === "True" ? 'text-green-500 font-medium' : ''}`}
+                                    >
+                                      {product.value}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  )}
+                </Tabs>
+              ) : (
+                // If no specs or comparison, show content with a subtle divider
+                <>
+                  <div className="h-px bg-border/40 my-8" />
                   <div className="prose prose-lg dark:prose-invert max-w-none">
                     {review.content.split('\n').map((line, index) => {
-                      // Handle headers
-                      if (line.startsWith('### ')) {
-                        return <h3 key={index} className="text-2xl font-bold mt-8 mb-4">{line.replace('### ', '')}</h3>;
+                      // Main title (H1)
+                      if (line.startsWith('# ')) {
+                        return (
+                          <h1 key={index} className="text-4xl font-bold mb-8 mt-12">
+                            {line.replace('# ', '')}
+                          </h1>
+                        );
                       }
+                      // Section titles (H2)
+                      if (line.startsWith('## ')) {
+                        return (
+                          <h2 key={index} className="text-3xl font-bold mb-6 mt-10">
+                            {line.replace('## ', '')}
+                          </h2>
+                        );
+                      }
+                      // Subsection titles (H3)
+                      if (line.startsWith('### ')) {
+                        return (
+                          <h3 key={index} className="text-2xl font-bold mb-4 mt-8">
+                            {line.replace('### ', '')}
+                          </h3>
+                        );
+                      }
+                      // Sub-subsection titles (H4)
                       if (line.startsWith('#### ')) {
-                        return <h4 key={index} className="text-xl font-bold mt-6 mb-3">{line.replace('#### ', '')}</h4>;
+                        return (
+                          <h4 key={index} className="text-xl font-semibold mb-3 mt-6">
+                            {line.replace('#### ', '')}
+                          </h4>
+                        );
                       }
                       // Handle bold text
                       if (line.includes('**')) {
+                        const parts = line.split('**');
                         return (
                           <p key={index} className="text-lg leading-relaxed mb-6">
-                            {line.split('**').map((part, i) => (
-                              i % 2 === 0 ? part : <strong key={i}>{part}</strong>
+                            {parts.map((part, i) => (
+                              i % 2 === 0 ? part : <strong key={i} className="font-semibold">{part}</strong>
                             ))}
                           </p>
                         );
@@ -603,71 +778,33 @@ const ReviewPage = () => {
                       // Handle bullet points
                       if (line.startsWith('- ')) {
                         return (
-                          <li key={index} className="text-lg leading-relaxed mb-2 ml-4">
+                          <li key={index} className="text-lg leading-relaxed mb-3 ml-6 list-disc">
                             {line.replace('- ', '')}
                           </li>
                         );
                       }
-                      // Handle regular paragraphs
-                      return <p key={index} className="text-lg leading-relaxed mb-6">{line}</p>;
+                      // Handle numbered lists
+                      if (/^\d+\.\s/.test(line)) {
+                        return (
+                          <li key={index} className="text-lg leading-relaxed mb-3 ml-6 list-decimal">
+                            {line.replace(/^\d+\.\s/, '')}
+                          </li>
+                        );
+                      }
+                      // Handle regular paragraphs with proper spacing
+                      if (line.trim()) {
+                        return (
+                          <p key={index} className="text-lg leading-relaxed mb-6">
+                            {line}
+                          </p>
+                        );
+                      }
+                      // Add spacing for empty lines
+                      return <div key={index} className="h-6" />;
                     })}
                   </div>
-
-                  <Separator className="my-12" />
-                </TabsContent>
-                
-                <TabsContent value="specs" className="mt-8">
-                  <div className="glass rounded-xl p-8 bg-background/50 backdrop-blur-sm border border-border/50">
-                    <div className="grid gap-6">
-                      {Object.keys(review.specifications || {}).map((key) => (
-                        <div 
-                          key={key} 
-                          className="grid grid-cols-2 gap-6 py-4 border-b last:border-0 hover:bg-primary/5 transition-colors duration-300 rounded-lg px-4"
-                        >
-                          <div className="font-medium text-lg text-foreground/80">{key}</div>
-                          <div className="text-foreground text-lg">{review.specifications[key]}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </TabsContent>
-
-                {review.comparisonTable && review.comparisonTable.length > 0 && (
-                  <TabsContent value="comparison" className="mt-8">
-                    <div className="glass rounded-xl p-8 bg-background/50 backdrop-blur-sm border border-border/50">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr>
-                              <th className="text-left p-4 border-b font-medium">Feature</th>
-                              {review.comparisonTable[0].products.map((product, index) => (
-                                <th key={index} className="text-left p-4 border-b font-medium">
-                                  {product.productName}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {review.comparisonTable.map((row, index) => (
-                              <tr key={index}>
-                                <td className="p-4 border-b font-medium">{row.feature}</td>
-                                {row.products.map((product, productIndex) => (
-                                  <td 
-                                    key={productIndex} 
-                                    className={`p-4 border-b ${product.winner === "True" ? 'text-green-500 font-medium' : ''}`}
-                                  >
-                                    {product.value}
-                                  </td>
-                                ))}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </TabsContent>
-                )}
-              </Tabs>
+                </>
+              )}
 
               {/* Comments Section */}
               <div className="mt-16">
